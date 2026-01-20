@@ -1,0 +1,20 @@
+# Objects and dependencies
+*.d
+*.o
+*.exe
+
+# Latex
+*.aux
+*.bib
+*.bbl
+*.bcf
+*.blg
+*.fdb*
+*.fls
+*.log
+*.synctex.gz
+*.tex
+*.xml
+
+# External
+external/*
