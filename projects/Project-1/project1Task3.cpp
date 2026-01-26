@@ -1,4 +1,5 @@
 // #include "../../include/ReadGRI.h"
+#include "../include/ReadGRI.h"
 #include <fstream>
 #include <sstream>
 #include <iostream>

@@ -8,10 +8,10 @@ struct Map {
     int Dim;
     int nBGroup;
     int nPG;
-    std::vector<std::vector<double>> XYZ;
+    std::vector<std::vector<double>> nodeXYZ;
 };
 
-struct BoundaryGroups {
+struct BoundaryGroup {
     std::vector<int> nBFace;
     std::vector<int> nf;
     std::vector<std::string> Title;
