@@ -62,6 +62,11 @@ int run_refine_demo(int argc, char** argv)
     const double hInf = 1.2;
     const double d0   = 1.5;
 
+    // Old Sizing Parameters
+    const double hMin = 0.02;
+    const double hMax = 1.20; // at least 0.9
+    const double d0   = 1.5;
+
     // Compute LE/TE robustly from blade sampling
     auto bladeXMinMax = [&](int Ns=400) {
         double xmin =  1e300, xmax = -1e300;
