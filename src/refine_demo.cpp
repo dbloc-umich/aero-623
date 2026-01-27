@@ -50,8 +50,16 @@ int run_refine_demo(int argc, char** argv)
     mesh::Projection2D projector;
 
     // Sizing parameters
+    const double sLE_ = 0.0;
+    const double sTE_ = 1.0;
+    const double wLE_ = 0.2;
+    const double wTE_ = 0.2;
+    const double wDelta_ = 0.3;
+    const double deltaMin_ = 0.1;
+    const double deltaMax_ = 0.3;
     const double hMin = 0.02;
-    const double hMax = 1.20; // at least 0.9
+    const double hMid = 0.5;
+    const double hInf = 1.2;
     const double d0   = 1.5;
 
     // Compute LE/TE robustly from blade sampling
