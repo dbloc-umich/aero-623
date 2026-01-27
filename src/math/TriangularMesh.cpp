@@ -138,8 +138,8 @@ Eigen::Vector2d TriangularMesh::normal(std::size_t elemID, std::size_t localFace
     Eigen::Vector2d normal{-edge[1], edge[0]};
     normal.normalize();
 
-    const Eigen::Vector2d& p1 = _nodes[elem._pointID[localFaceID]]; // One of the points on this edge
-    const Eigen::Vector2d& p2 = _nodes[elem._pointID[(localFaceID+2)%3]]; // Point not on this edge
+    const Eigen::Vector2d& p1 = _nodes[elem._pointID[(localFaceID+1)%3]]; // One of the points on this edge
+    const Eigen::Vector2d& p2 = _nodes[elem._pointID[localFaceID]]; // Point not on this edge
     if ((p2-p1).dot(normal) < 0) return normal;
     return -normal;
 }
