@@ -60,7 +60,6 @@ int run_refine_demo(int argc, char** argv)
     const double hMin = 0.02;
     const double hMid = 0.5;
     const double hInf = 1.2;
-    const double d0   = 1.5;
 
     // Old Sizing Parameters
     const double hMin = 0.02;
