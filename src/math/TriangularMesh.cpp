@@ -249,7 +249,13 @@ void TriangularMesh::writeGri(const std::string& fileName) const noexcept{
         std::size_t elemID = face._elemID[0];
         const Element& elem = _elems[elemID];
         std::size_t localFaceID = std::find(elem._faceID.cbegin(), elem._faceID.cend(), i) - elem._faceID.cbegin();
-        of << normal(elemID, localFaceID).transpose() << "\n";
+
+        int invert = 1;
+        if (face._periodicFaceID != -1){
+            std::cout << "Face from " << face._elemID[0] << ", face to " << face._periodicElemID << std::endl;
+            if (elemID > face._periodicElemID) invert *= -1;
+        }
+        of << normal(elemID, localFaceID).transpose() * invert << "\n";
     }
     of.close();
 
