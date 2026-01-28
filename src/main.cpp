@@ -1,9 +1,12 @@
 // #include "GaussKronrod.h"
 #include "../include/ReadGRI.h"
+#include "../include/ReadConnData.h"
+#include "../include/project1Task3.h"
 #include <iostream>
 
 int main(){
-    try {
+    // Testing GRI input
+    /*try {
         GRIData gridData = readGriFile("/mnt/c/Users/mmaru/Desktop/AE623/Project 1/projects/Project-1/test.gri");
 
         // std::cout << "nNode: " << testData.map.nNode << std::endl;
@@ -63,5 +66,19 @@ int main(){
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
         return 1;
-    }
+    } */
+
+
+    // Mesh verification on test mesh
+    std::string GriFile = "/mnt/c/Users/mmaru/Desktop/AE623/Project 1/projects/Project-1/test.gri";
+    std::vector<std::string> txtFiles = {"/mnt/c/Users/mmaru/Desktop/AE623/Project 1/projects/Project-1/testperiodicEdges.txt",
+            "/mnt/c/Users/mmaru/Desktop/AE623/Project 1/projects/Project-1/testI2E.txt",
+        "/mnt/c/Users/mmaru/Desktop/AE623/Project 1/projects/Project-1/testIn.txt",
+    "/mnt/c/Users/mmaru/Desktop/AE623/Project 1/projects/Project-1/testB2E.txt",
+"/mnt/c/Users/mmaru/Desktop/AE623/Project 1/projects/Project-1/testBn.txt"};
+
+    meshVerification(GriFile, txtFiles);
+    
+    // Mesh verification on coarse mesh
+    
 }

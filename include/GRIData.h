@@ -34,9 +34,16 @@ public:
         std::vector<std::vector<std::vector<int>>> NP; // Pairs for periodic nodes
     };
 
+    struct Normals {
+        std::vector<std::vector<double>> normalInterior;
+        std::vector<std::vector<double>> normalExterior;
+        std::vector<double> edgeLength;
+    };
+
     Map map;
     BoundaryGroup boundaryGroup;
     ElementGroup elementGroup;
     PeriodicGroup periodicGroup;
+    Normals normalGroup;
 
 };
