@@ -101,10 +101,10 @@ def plot_mesh_with_blades(mesh, blade_upper, blade_lower, out_png):
 #-----------------------------------------------------------
 def main():
 
-    base = "/home/jaehyn/CFD2/aero-623"
-    gri_file  = "/home/jaehyn/CFD2/aero-623/mesh_refined.gri"
+    base = "/Users/niranjannanjappa/Coursework_Umich/CFD 2/aero-623"
+    gri_file  = base + "/mesh_refined.gri"
     dist_file = gri_file.replace(".gri", ".walldist.txt")
-    out_png   = "/home/jaehyn/CFD2/aero-623/wall_distance.png"
+    out_png   = base + "/wall_distance.png"
 
     Mesh = readgri(gri_file)
     dist = read_scalar_field_maybe_header(dist_file)
@@ -116,8 +116,8 @@ def main():
 
     plot_wall_distance(Mesh, dist, out_png, show_mesh=True, use_log=False)
 
-    h = np.loadtxt("mesh_refined.hnode.txt")
-    plot_wall_distance(Mesh, h, "size_function.png") # legend should be size function h
+    h = np.loadtxt(base + "/mesh_refined.hnode.txt")
+    plot_wall_distance(Mesh, h, base + "/size_function.png") # legend should be size function h
     
     mesh_file = base + "/projects/Project-1/mesh_coarse.gri"  # available in sandbox
     mesh = readgri(str(mesh_file))
