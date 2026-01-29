@@ -79,32 +79,34 @@ TriangularMesh::TriangularMesh(const std::string& fileName){
 
     // Periodic boundaries
     splitNextLine();
-    std::size_t nPG = std::stoi(v[0]);
-    for (std::size_t i = 0; i < nPG; i++){
-        splitNextLine();
-        std::size_t nPGNode = std::stoi(v[0]);
-        if (nPGNode >= 2){
+    if (v.size() > 0){
+        std::size_t nPG = std::stoi(v[0]);
+        for (std::size_t i = 0; i < nPG; i++){
             splitNextLine();
-            std::size_t ind1 = std::stoi(v[0])-1;
-            std::size_t ind2 = std::stoi(v[1])-1;
-            Face left(ind1, ind2);
-
-            for (std::size_t j = 1; j < nPGNode; j++){
+            std::size_t nPGNode = std::stoi(v[0]);
+            if (nPGNode >= 2){
                 splitNextLine();
-                ind1 = std::stoi(v[0])-1;
-                ind2 = std::stoi(v[1])-1;
-                Face right(ind1, ind2);
+                std::size_t ind1 = std::stoi(v[0])-1;
+                std::size_t ind2 = std::stoi(v[1])-1;
+                Face left(ind1, ind2);
 
-                // Locate the periodic faces
-                auto it1 = std::find(_faces.begin(), _faces.end(), left);
-                auto it2 = std::find(_faces.begin(), _faces.end(), right);
-                it1->_periodicFaceID = it2 - _faces.cbegin();
-                it1->_periodicElemID = it2->_elemID[0];
+                for (std::size_t j = 1; j < nPGNode; j++){
+                    splitNextLine();
+                    ind1 = std::stoi(v[0])-1;
+                    ind2 = std::stoi(v[1])-1;
+                    Face right(ind1, ind2);
 
-                it2->_periodicFaceID = it1 - _faces.cbegin();
-                it2->_periodicElemID = it1->_elemID[0];
+                    // Locate the periodic faces
+                    auto it1 = std::find(_faces.begin(), _faces.end(), left);
+                    auto it2 = std::find(_faces.begin(), _faces.end(), right);
+                    it1->_periodicFaceID = it2 - _faces.cbegin();
+                    it1->_periodicElemID = it2->_elemID[0];
 
-                left = right;
+                    it2->_periodicFaceID = it1 - _faces.cbegin();
+                    it2->_periodicElemID = it1->_elemID[0];
+
+                    left = right;
+                }
             }
         }
     }
@@ -202,7 +204,7 @@ void TriangularMesh::writeGri(const std::string& fileName) const noexcept{
     of.open(fileBase + "periodicEdges.txt");
     std::vector<int> periodicEdgeID;
     periodicEdgeID.reserve(_faces.size());
-    stop = false;
+    stop = periodicEdgeID.size() == 0;
     int i = 1;
     while (!stop){
         for (auto face: _faces){
@@ -251,10 +253,7 @@ void TriangularMesh::writeGri(const std::string& fileName) const noexcept{
         std::size_t localFaceID = std::find(elem._faceID.cbegin(), elem._faceID.cend(), i) - elem._faceID.cbegin();
 
         int invert = 1;
-        if (face._periodicFaceID != -1){
-            std::cout << "Face from " << face._elemID[0] << ", face to " << face._periodicElemID << std::endl;
-            if (elemID > face._periodicElemID) invert *= -1;
-        }
+        if (face._periodicFaceID != -1) if (elemID > face._periodicElemID) invert *= -1;
         of << normal(elemID, localFaceID).transpose() * invert << "\n";
     }
     of.close();
