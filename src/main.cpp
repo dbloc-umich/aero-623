@@ -70,15 +70,35 @@ int main(){
 
 
     // Mesh verification on test mesh
-    std::string GriFile = "/mnt/c/Users/mmaru/Desktop/AE623/Project 1/projects/Project-1/test.gri";
-    std::vector<std::string> txtFiles = {"/mnt/c/Users/mmaru/Desktop/AE623/Project 1/projects/Project-1/testperiodicEdges.txt",
+    std::string testGriFile = "/mnt/c/Users/mmaru/Desktop/AE623/Project 1/projects/Project-1/test.gri";
+    std::vector<std::string> testTxtFiles = {"/mnt/c/Users/mmaru/Desktop/AE623/Project 1/projects/Project-1/testperiodicEdges.txt",
             "/mnt/c/Users/mmaru/Desktop/AE623/Project 1/projects/Project-1/testI2E.txt",
         "/mnt/c/Users/mmaru/Desktop/AE623/Project 1/projects/Project-1/testIn.txt",
     "/mnt/c/Users/mmaru/Desktop/AE623/Project 1/projects/Project-1/testB2E.txt",
 "/mnt/c/Users/mmaru/Desktop/AE623/Project 1/projects/Project-1/testBn.txt"};
-
-    meshVerification(GriFile, txtFiles);
+    std::cout << "------------Mesh Verification for Test Grid------------" <<std::endl;
+    meshVerification(testGriFile, testTxtFiles);
+    std::cout <<std::endl;
     
     // Mesh verification on coarse mesh
-    
+    std::string coarseGriFile = "/mnt/c/Users/mmaru/Desktop/AE623/Project 1/projects/Project-1/mesh_refined_2394.gri";
+    std::vector<std::string> coarseTxtFiles = {"/mnt/c/Users/mmaru/Desktop/AE623/Project 1/projects/Project-1/mesh_refined_2394periodicEdges.txt",
+            "/mnt/c/Users/mmaru/Desktop/AE623/Project 1/projects/Project-1/mesh_refined_2394I2E.txt",
+        "/mnt/c/Users/mmaru/Desktop/AE623/Project 1/projects/Project-1/mesh_refined_2394In.txt",
+    "/mnt/c/Users/mmaru/Desktop/AE623/Project 1/projects/Project-1/mesh_refined_2394B2E.txt",
+"/mnt/c/Users/mmaru/Desktop/AE623/Project 1/projects/Project-1/mesh_refined_2394Bn.txt"};
+    std::cout << "------------Mesh Verification for Coarse Grid------------" <<std::endl;
+    meshVerification(coarseGriFile, coarseTxtFiles);
+    std::cout <<std::endl;
+
+    std::string refinedGriFile = "/mnt/c/Users/mmaru/Desktop/AE623/Project 1/projects/Project-1/mesh_refined_9576.gri";
+    std::vector<std::string> refinedtxtFiles = {"/mnt/c/Users/mmaru/Desktop/AE623/Project 1/projects/Project-1/mesh_refined_9576periodicEdges.txt",
+            "/mnt/c/Users/mmaru/Desktop/AE623/Project 1/projects/Project-1/mesh_refined_9576I2E.txt",
+        "/mnt/c/Users/mmaru/Desktop/AE623/Project 1/projects/Project-1/mesh_refined_9576In.txt",
+    "/mnt/c/Users/mmaru/Desktop/AE623/Project 1/projects/Project-1/mesh_refined_9576B2E.txt",
+"/mnt/c/Users/mmaru/Desktop/AE623/Project 1/projects/Project-1/mesh_refined_9576Bn.txt"};
+    std::cout << "------------Mesh Verification for Refined Grid------------" <<std::endl;
+    meshVerification(refinedGriFile, refinedtxtFiles);
+    std::cout <<std::endl;
+
 }

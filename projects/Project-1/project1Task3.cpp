@@ -80,28 +80,32 @@ GRIData readGriFile(const std::string& filename) {
         data.elementGroup.basis.emplace_back(std::move(basisTemp));
         data.elementGroup.NE.emplace_back(std::move(neVec));
     };
-    
+
     // Saving periodicity data
+    
     std::string declarePeriodicity;
     file >> data.map.nPG >> declarePeriodicity;
-    data.periodicGroup.nPGNode.reserve(data.map.nPG);
-    data.periodicGroup.periodicity.reserve(data.map.nPG);
-    data.periodicGroup.NP.reserve(data.map.nPG);
-    for (int i=0;i<data.map.nPG;i++) {
-        int npgNodeTemp;
-        std::string periodTemp;
-        std::vector<std::vector<int>> innerVec3;
-        file >> npgNodeTemp >> periodTemp;
-        for (int j=0;j<npgNodeTemp;j++) {
-            int pair1, pair2;
-            file >> pair1 >> pair2;
-            innerVec3.emplace_back(std::vector<int>{pair1,pair2});
+    if (declarePeriodicity == "PeriodicGroup") {
+        data.periodicGroup.nPGNode.reserve(data.map.nPG);
+        data.periodicGroup.periodicity.reserve(data.map.nPG);
+        data.periodicGroup.NP.reserve(data.map.nPG);
+        for (int i=0;i<data.map.nPG;i++) {
+            int npgNodeTemp;
+            std::string periodTemp;
+            std::vector<std::vector<int>> innerVec3;
+            file >> npgNodeTemp >> periodTemp;
+            for (int j=0;j<npgNodeTemp;j++) {
+                int pair1, pair2;
+                file >> pair1 >> pair2;
+                innerVec3.emplace_back(std::vector<int>{pair1,pair2});
+            }
+            data.periodicGroup.NP.emplace_back(std::move(innerVec3));
+            data.periodicGroup.nPGNode.emplace_back(npgNodeTemp);
+            data.periodicGroup.periodicity.emplace_back(std::move(periodTemp));
         }
-        data.periodicGroup.NP.emplace_back(std::move(innerVec3));
-        data.periodicGroup.nPGNode.emplace_back(npgNodeTemp);
-        data.periodicGroup.periodicity.emplace_back(std::move(periodTemp));
     }
-
+    else {data.map.nPG = -1;}
+    // std::cout << "saved GRI data successfully " << std::endl;
     return data;
 
 }
@@ -111,7 +115,6 @@ GRIData readGriFile(const std::string& filename) {
 CONNData readConnData(const std::vector<std::string>& filenames) {
 // File names are stored as: {"testperiodicEdges.txt", "I2E.txt", "In.txt", "B2E.txt", "Bn.txt"}
     CONNData data;
-
     // Saving periodic indices
     std::ifstream file(filenames[0]);
     if (!file) throw std::runtime_error("Could not open file " + filenames[0]);
@@ -209,24 +212,25 @@ CONNData readConnData(const std::vector<std::string>& filenames) {
         data.Bn.emplace_back(std::vector<double> {point1, point2});
     }
     file4.close();
-
+    // std::cout << "Successfully read conn data" << std::endl;
     return data;
 }
 
 bool meshVerification(const std::string& GriFile, const std::vector<std::string>& txtFiles) {
     std::cout << "Running mesh verification"<<std::endl;
-    
+
     GRIData gridData = readGriFile(GriFile);
     CONNData connData = readConnData(txtFiles);
-
     // Calculate lengths of sides for boundary and interior edges
     int lenInt = connData.In.size();
     int lenBoun = connData.Bn.size();
     connData.sideLenInt.reserve(lenInt);
+    // std::cout << "Reserved side length array: "<< lenInt << std::endl;
     for (int i=0;i<lenInt;i++) {
+        // std::cout << "iter: " << i << std::endl;
         int elemL = connData.I2E[i][0];
         int faceL = connData.I2E[i][1];
-
+        // std::cout << "determined elem face" << std::endl;
         // Note: Nodes are 1-based
         int indAcross = gridData.elementGroup.NE[0][elemL-1][faceL-1];
         int ind1, ind2;
@@ -243,12 +247,17 @@ bool meshVerification(const std::string& GriFile, const std::vector<std::string>
             ind2 = gridData.elementGroup.NE[0][elemL-1][1];
         }
         else {throw std::runtime_error("Face index is not stored as 1-2-3 ");};
-
-        gridData.map.nodeXYZ[ind1-1][0];
+        // std::cout << "determined ind1 ind2: "<< ind1<< " " << ind2 << std::endl;
+        // std::cout << gridData.map.nodeXYZ[ind1-1][0] << std::endl;
+        // std::cout << gridData.map.nodeXYZ[ind1-1][1] << std::endl;
+        // std::cout << gridData.map.nodeXYZ[ind2-1][0] << std::endl;
+        // std::cout << gridData.map.nodeXYZ[ind2-1][1] << std::endl;
         double lenSeg = sqrt(pow(gridData.map.nodeXYZ[ind2-1][0]-gridData.map.nodeXYZ[ind1-1][0],2) + pow(gridData.map.nodeXYZ[ind2-1][1]-gridData.map.nodeXYZ[ind1-1][1],2));
+        // std::cout << "calculated length" << std::endl;
         connData.sideLenInt.emplace_back(lenSeg);
+        // std::cout << "saved side length" << std::endl;
     }
-
+    // std::cout << "successfully computed lengths of interior sides" << std::endl;
 
     connData.sideLenBoundary.reserve(lenBoun);
     for (int i=0;i<lenBoun;i++) {
@@ -278,7 +287,7 @@ bool meshVerification(const std::string& GriFile, const std::vector<std::string>
         double lenSeg = sqrt(pow(gridData.map.nodeXYZ[ind2-1][0]-gridData.map.nodeXYZ[ind1-1][0],2) + pow(gridData.map.nodeXYZ[ind2-1][1]-gridData.map.nodeXYZ[ind1-1][1],2));
         connData.sideLenBoundary.emplace_back(lenSeg);
     }
-
+    // std::cout << "successfully computed lengths of boundary sides" << std::endl;
 
     // Calculate error in each grid cell
     std::vector<double> Ee_vecX(gridData.map.nElemTot,0.0);
@@ -298,13 +307,15 @@ bool meshVerification(const std::string& GriFile, const std::vector<std::string>
         Ee_vecY[connData.I2E[i][0]-1] = Ee_vecY[connData.I2E[i][0]-1]+errLeftY;
     }
     // Loop over exterior edges (only one cell)
-    for (int i=0;i<lenInt;i++) {
+    for (int i=0;i<lenBoun;i++) {
+        // std::cout << "iter: " << i << std::endl; // seg fault at 296
         double errX, errY;
         errX = connData.sideLenBoundary[i] * connData.Bn[i][0];
         errY = connData.sideLenBoundary[i] * connData.Bn[i][1];
         Ee_vecX[connData.B2E[i][0]-1] = Ee_vecX[connData.B2E[i][0]-1]+errX;
         Ee_vecY[connData.B2E[i][0]-1] = Ee_vecY[connData.B2E[i][0]-1]+errY;
     }
+    // std::cout << "successfully computed cell errors" << std::endl;
 
     double maxErr = 0.0;
     int indMaxErr = -1;
