@@ -2,7 +2,6 @@
  * Using Gauss-Legendre Quadrature to evaluate the integral of f(x) over a finite domain. 
 **/
 
-/*
 #ifndef GAUSS_LEGENDRE_H
 #define GAUSS_LEGENDRE_H
 
@@ -54,4 +53,3 @@ class GaussLegendre : public GaussianQuadrature<N, M>, GaussLegendreBase{
 };
 
 #endif
-*/

@@ -27,7 +27,6 @@ INC = $(addprefix -I,$(INC_SUBDIRS))
 CXX = g++
 CXXFLAGS = -Wall -O2 -MMD -MP -std=c++17 $(INC) -I./external # directory to external codes, add more if needed
 
-
 .PHONY: all clean test
 
 # make all
