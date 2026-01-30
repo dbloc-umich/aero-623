@@ -3,7 +3,6 @@
 #include <iostream>
 #include <string>
 
-// extern int run_proj1_demo(int argc, char** argv);
 extern int run_refine_demo(int argc, char** argv);
 
 int main(int argc, char** argv) {
