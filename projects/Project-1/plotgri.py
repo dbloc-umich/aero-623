@@ -55,19 +55,29 @@ def read_scalar_field_maybe_header(path):
     return vals
 
 #-----------------------------------------------------------
-def plot_wall_distance(Mesh, dist, fname, show_mesh=True, use_log=False, clim=None):
+def plot_wall_distance(Mesh, dist, fname, show_mesh=True, use_log=False, clim=None, plot_sizing=False):
     V = Mesh['V']; E = Mesh['E']
 
     if dist.shape[0] != V.shape[0]:
         raise ValueError(f"dist length {dist.shape[0]} != number of nodes {V.shape[0]}")
 
-    field = dist.copy()
-    title = "Wall distance"
-    if use_log:
-        field = np.log10(np.maximum(field, 1e-16))
-        title = "log10(wall distance)"
+    if plot_sizing:
+        if use_log:
+            field = np.log10(np.maximum(field, 1e-16))
+            title = "log10(size function h)"
+        else:
+            field = dist.copy()
+            title = "Size function h"
+    else:
+        if use_log:
+            field = np.log10(np.maximum(field, 1e-16))
+            title = "log10(wall distance)"
+        else:
+            field = dist.copy()
+            title = "Wall distance"
+    
 
-    fig = plt.figure(figsize=(12, 12))
+    fig = plt.figure(figsize=(12, 8))
     tpc = plt.tripcolor(V[:, 0], V[:, 1], E, field, shading='gouraud')
 
     if clim is not None:
@@ -104,7 +114,8 @@ def main():
     base = "/Users/niranjannanjappa/Coursework_Umich/CFD 2/aero-623"
     gri_file  = base + "/mesh_refined.gri"
     dist_file = gri_file.replace(".gri", ".walldist.txt")
-    out_png   = base + "/wall_distance.png"
+    out_png_dist   = base + "/wall_distance.png"
+    out_png_size = base + "/size_function.png"
 
     Mesh = readgri(gri_file)
     dist = read_scalar_field_maybe_header(dist_file)
@@ -114,10 +125,10 @@ def main():
     if dist.size:
         print("min/max=", dist.min(), dist.max())
 
-    plot_wall_distance(Mesh, dist, out_png, show_mesh=True, use_log=False)
+    plot_wall_distance(Mesh, dist, out_png_dist, show_mesh=True, use_log=False)
 
     h = np.loadtxt(base + "/mesh_refined.hnode.txt")
-    plot_wall_distance(Mesh, h, base + "/size_function.png") # legend should be size function h
+    plot_wall_distance(Mesh, h, out_png_size, show_mesh=True, use_log=False, plot_sizing=True)
     
     mesh_file = base + "/projects/Project-1/mesh_coarse.gri"  # available in sandbox
     mesh = readgri(str(mesh_file))
