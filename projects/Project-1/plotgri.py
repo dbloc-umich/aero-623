@@ -114,23 +114,23 @@ def main():
 
     base = os.getcwd()
 
-    gri_file  = base + "/mesh_refined.gri"
-    dist_file = gri_file.replace(".gri", ".walldist.txt")
-    out_png_dist   = base + "/wall_distance.png"
-    out_png_size = base + "/size_function.png"
+    # gri_file  = base + "/mesh_refined.gri"
+    # dist_file = gri_file.replace(".gri", ".walldist.txt")
+    # out_png_dist   = base + "/wall_distance.png"
+    # out_png_size = base + "/size_function.png"
 
-    Mesh = readgri(gri_file)
-    dist = read_scalar_field_maybe_header(dist_file)
+    # Mesh = readgri(gri_file)
+    # dist = read_scalar_field_maybe_header(dist_file)
 
-    print("Nnodes =", Mesh["V"].shape[0])
-    print("Ndist  =", dist.shape[0])
-    if dist.size:
-        print("min/max=", dist.min(), dist.max())
+    # print("Nnodes =", Mesh["V"].shape[0])
+    # print("Ndist  =", dist.shape[0])
+    # if dist.size:
+    #     print("min/max=", dist.min(), dist.max())
 
-    plot_wall_distance(Mesh, dist, out_png_dist, show_mesh=True, use_log=False)
+    # plot_wall_distance(Mesh, dist, out_png_dist, show_mesh=True, use_log=False)
 
-    h = np.loadtxt(base + "/mesh_refined.hnode.txt")
-    plot_wall_distance(Mesh, h, out_png_size, show_mesh=True, use_log=False, plot_sizing=True)
+    # h = np.loadtxt(base + "/mesh_refined.hnode.txt")
+    # plot_wall_distance(Mesh, h, out_png_size, show_mesh=True, use_log=False, plot_sizing=True)
     
     mesh_file = base + "/projects/Project-1/mesh_coarse.gri"  # available in sandbox
     mesh = readgri(str(mesh_file))
