@@ -9,6 +9,7 @@ SRC_DIR = src
 INC_SUBDIRS = $(shell find $(INC_DIR) -type d)
 SRC_SUBDIRS = $(shell find $(SRC_DIR) -type d)
 
+# SRC = $(shell find $(SRC_DIR) -name '*.cpp')
 SRC = $(shell find $(SRC_DIR) -name '*.cpp')
 OBJ = $(SRC:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 DEP = $(SRC:$(SRC_DIR)/%.cpp=$(DEP_DIR)/%.d)
@@ -25,9 +26,9 @@ TEST_DEP := $(TEST_SRC:$(TEST_DIR)/%.cpp=$(DEP_DIR)/$(TEST_DIR)/%.d)
 
 INC = $(addprefix -I,$(INC_SUBDIRS))
 CXX = g++
-CXXFLAGS = -Wall -O2 -MMD -MP -std=c++17 $(INC) -I./external # directory to external codes, add more if needed
+CXXFLAGS = -Wall -O2 -MMD -MP -std=c++17 $(INC) -Iexternal/eigen # directory to external codes, add more if needed
 
-.PHONY: all clean test
+.PHONY: all clean test proj1
 
 # make all
 all: $(TARGET)

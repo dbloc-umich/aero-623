@@ -1,3 +1,7 @@
+// src/main.cpp
+
+#include <iostream>
+#include <string>
 #include "../include/ReadGRI.h"
 #include "../include/ReadConnData.h"
 #include "../include/project1Task3.h"
@@ -7,7 +11,7 @@
 
 bool verificationSuite();
 
-int main(){
+int main(int argc, char** argv) {
     
     TriangularMesh mesh("projects/Project-1/mesh_coarse.gri");
     mesh.writeGri("projects/Project-1/mesh_coarse.gri");
@@ -87,6 +91,19 @@ std::string testGriFile = "projects/Project-1/test.gri";
     std::cout << "------------Mesh Verification for Global Refined Grid 3 ------------" <<std::endl;
     meshVerification(refined3GriFile, refined3TxtFiles);
     std::cout <<std::endl;
+  
+  extern int run_refine_demo(int argc, char** argv);
 
-    return true;
+    if (argc < 2) {
+        std::cerr
+          << "Usage:\n"
+          << "  " << argv[0] << " refine <mesh.gri> <bladeupper.txt> <bladelower.txt> <out.gri> [alpha] [maxIters]\n";
+        return 2;
+    }
+
+    const std::string mode = argv[1];
+    if (mode == "refine") return run_refine_demo(argc, argv);
+
+    std::cerr << "Unknown mode: " << mode << "\n";
+    return true, 2;
 }
