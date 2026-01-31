@@ -1,109 +1,126 @@
 // src/main.cpp
-
 #include <iostream>
 #include <string>
+#include <vector>
+#include <filesystem>
+
 #include "../include/ReadGRI.h"
 #include "../include/ReadConnData.h"
 #include "../include/MeshVerification.h"
-#include <iostream>
 #include "TriangularMesh.h"
-#include <filesystem>
 
-bool verificationSuite();
+// declare demo entrypoint (defined elsewhere)
+extern int run_refine_demo(int argc, char** argv);
+
+static bool verificationSuite();
 
 int main(int argc, char** argv) {
-    
+
+    // ---------------- CLI dispatcher ----------------
+    // Example:
+    //   ./aero623 refine <mesh.gri> <bladeupper.txt> <bladelower.txt> <out.gri> [alpha] [maxIters]
+    if (argc >= 2) {
+        std::string mode = argv[1];
+
+        if (mode == "refine") {
+            // Forward all args to refine demo
+            return run_refine_demo(argc, argv);
+        }
+
+        if (mode == "verify") {
+            // fall through to verification below
+        } else if (mode != "verify") {
+            std::cerr
+                << "Unknown mode: " << mode << "\n\n"
+                << "Usage:\n"
+                << "  " << argv[0] << " verify\n"
+                << "  " << argv[0] << " refine <mesh.gri> <bladeupper.txt> <bladelower.txt> <out.gri> [alpha] [maxIters]\n";
+            return 2;
+        }
+    }
+
+    // ---------------- default behavior: verification ----------------
+    // If you need this, keep it. Otherwise remove it.
     TriangularMesh mesh("projects/Project-1/mesh_coarse.gri");
     mesh.writeGri("projects/Project-1/mesh_coarse.gri");
 
-    // std::cout << "C++ version: " << __cplusplus << std::endl;
-
-    if (!verificationSuite()) throw std::runtime_error("Verification test(s) failed");
-}
-
-bool verificationSuite() {
-    std::cout << "Running mesh verification suite.........................." << std::endl;
-     // Mesh verification on test mesh
-
-     std::filesystem::path currentDir = std::filesystem::current_path();
-
-// Convert to a string and print
-std::cout << "Current working directory: " << currentDir.string() << std::endl;
-
-std::string testGriFile = "projects/Project-1/test.gri";
-    std::vector<std::string> testTxtFiles = {"projects/Project-1/testperiodicEdges.txt",
-            "projects/Project-1/testI2E.txt",
-        "projects/Project-1/testIn.txt",
-    "projects/Project-1/testB2E.txt",
-"projects/Project-1/testBn.txt"};
-    std::cout << "------------Mesh Verification for Test Grid------------" <<std::endl;
-    meshVerification(testGriFile, testTxtFiles);
-    std::cout <<std::endl;
-
-// Mesh verification on coarse mesh
-    std::string coarseGriFile = "projects/Project-1/mesh_coarse.gri";
-    std::vector<std::string> coarseTxtFiles = {"projects/Project-1/mesh_coarseperiodicEdges.txt",
-            "projects/Project-1/mesh_coarseI2E.txt",
-        "projects/Project-1/mesh_coarseIn.txt",
-    "projects/Project-1/mesh_coarseB2E.txt",
-"projects/Project-1/mesh_coarseBn.txt"};
-    std::cout << "------------Mesh Verification for Coarse Grid------------" <<std::endl;
-    meshVerification(coarseGriFile, coarseTxtFiles);
-    std::cout <<std::endl;
-
-    // Mesh verification on refined mesh
-    std::string localRefinedGriFile = "projects/Project-1/mesh_refined_2394.gri";
-    std::vector<std::string> localRefinedTxtFiles = {"projects/Project-1/mesh_refined_2394periodicEdges.txt",
-            "projects/Project-1/mesh_refined_2394I2E.txt",
-        "projects/Project-1/mesh_refined_2394In.txt",
-    "projects/Project-1/mesh_refined_2394B2E.txt",
-"projects/Project-1/mesh_refined_2394Bn.txt"};
-    std::cout << "------------Mesh Verification for Locally Refined Grid------------" <<std::endl;
-    meshVerification(localRefinedGriFile, localRefinedTxtFiles);
-    std::cout <<std::endl;
-
-    std::string refined1GriFile = "projects/Project-1/meshGlobalRefined1.gri";
-    std::vector<std::string> refined1TxtFiles = {"projects/Project-1/meshGlobalRefined1periodicEdges.txt",
-            "projects/Project-1/meshGlobalRefined1I2E.txt",
-        "projects/Project-1/meshGlobalRefined1In.txt",
-    "projects/Project-1/meshGlobalRefined1B2E.txt",
-"projects/Project-1/meshGlobalRefined1Bn.txt"};
-    std::cout << "------------Mesh Verification for Global Refined Grid 1 ------------" <<std::endl;
-    meshVerification(refined1GriFile, refined1TxtFiles);
-    std::cout <<std::endl;
-
-    std::string refined2GriFile = "projects/Project-1/meshGlobalRefined2.gri";
-    std::vector<std::string> refined2TxtFiles = {"projects/Project-1/meshGlobalRefined2periodicEdges.txt",
-            "projects/Project-1/meshGlobalRefined2I2E.txt",
-        "projects/Project-1/meshGlobalRefined2In.txt",
-    "projects/Project-1/meshGlobalRefined2B2E.txt",
-"projects/Project-1/meshGlobalRefined2Bn.txt"};
-    std::cout << "------------Mesh Verification for Global Refined Grid 2 ------------" <<std::endl;
-    meshVerification(refined2GriFile, refined2TxtFiles);
-    std::cout <<std::endl;
-
-    std::string refined3GriFile = "projects/Project-1/meshGlobalRefined3.gri";
-    std::vector<std::string> refined3TxtFiles = {"projects/Project-1/meshGlobalRefined3periodicEdges.txt",
-            "projects/Project-1/meshGlobalRefined3I2E.txt",
-        "projects/Project-1/meshGlobalRefined3In.txt",
-    "projects/Project-1/meshGlobalRefined3B2E.txt",
-"projects/Project-1/meshGlobalRefined3Bn.txt"};
-    std::cout << "------------Mesh Verification for Global Refined Grid 3 ------------" <<std::endl;
-    meshVerification(refined3GriFile, refined3TxtFiles);
-    std::cout <<std::endl;
-  
-  extern int run_refine_demo(int argc, char** argv);
-
-    if (argc < 2) {
-        std::cerr
-          << "Usage:\n"
-          << "  " << argv[0] << " refine <mesh.gri> <bladeupper.txt> <bladelower.txt> <out.gri> [alpha] [maxIters]\n";
-        return 2;
+    if (!verificationSuite()) {
+        throw std::runtime_error("Verification test(s) failed");
     }
 
-    const std::string mode = argv[1];
-    if (mode == "refine") return run_refine_demo(argc, argv);
+    return 0;
+}
 
-    std::cerr << "Unknown mode: " << mode << "\n";
-    return true, 2;
+static bool verificationSuite() {
+    std::cout << "Running mesh verification suite..........................\n";
+
+    std::filesystem::path currentDir = std::filesystem::current_path();
+    std::cout << "Current working directory: " << currentDir.string() << "\n";
+
+    // ---- Test mesh ----
+    {
+        std::string gri = "projects/Project-1/test.gri";
+        std::vector<std::string> txt = {
+            "projects/Project-1/testperiodicEdges.txt",
+            "projects/Project-1/testI2E.txt",
+            "projects/Project-1/testIn.txt",
+            "projects/Project-1/testB2E.txt",
+            "projects/Project-1/testBn.txt"
+        };
+        std::cout << "------------Mesh Verification for Test Grid------------\n";
+        meshVerification(gri, txt);
+        std::cout << "\n";
+    }
+
+    // ---- Coarse mesh ----
+    {
+        std::string gri = "projects/Project-1/mesh_coarse.gri";
+        std::vector<std::string> txt = {
+            "projects/Project-1/mesh_coarseperiodicEdges.txt",
+            "projects/Project-1/mesh_coarseI2E.txt",
+            "projects/Project-1/mesh_coarseIn.txt",
+            "projects/Project-1/mesh_coarseB2E.txt",
+            "projects/Project-1/mesh_coarseBn.txt"
+        };
+        std::cout << "------------Mesh Verification for Coarse Grid------------\n";
+        meshVerification(gri, txt);
+        std::cout << "\n";
+    }
+
+    // ---- Local refined mesh ----
+    {
+        std::string gri = "projects/Project-1/mesh_refined_2394.gri";
+        std::vector<std::string> txt = {
+            "projects/Project-1/mesh_refined_2394periodicEdges.txt",
+            "projects/Project-1/mesh_refined_2394I2E.txt",
+            "projects/Project-1/mesh_refined_2394In.txt",
+            "projects/Project-1/mesh_refined_2394B2E.txt",
+            "projects/Project-1/mesh_refined_2394Bn.txt"
+        };
+        std::cout << "------------Mesh Verification for Locally Refined Grid------------\n";
+        meshVerification(gri, txt);
+        std::cout << "\n";
+    }
+
+    // ---- Global refined meshes ----
+    auto verify_global = [](int k) {
+        std::string base = "projects/Project-1/meshGlobalRefined" + std::to_string(k);
+        std::string gri  = base + ".gri";
+        std::vector<std::string> txt = {
+            base + "periodicEdges.txt",
+            base + "I2E.txt",
+            base + "In.txt",
+            base + "B2E.txt",
+            base + "Bn.txt"
+        };
+        std::cout << "------------Mesh Verification for Global Refined Grid " << k << " ------------\n";
+        meshVerification(gri, txt);
+        std::cout << "\n";
+    };
+
+    verify_global(1);
+    verify_global(2);
+    verify_global(3);
+
+    return true;
 }

@@ -4,13 +4,18 @@ Hi! This is the AEROSP 623 repo for our group. I've included a bit of my source 
 are built on the Eigen library, which consists matrix/vector classes and linear algebra routines. You will need to clone their source code down from their repo
 (git@github.com:PX4/eigen.git) and put the entire `Eigen` subdirectory under `external` before you can compile.
 
-Build: 
+# Airfoil Geometry
+curve 1 is upperblade
+curve 5 is lowerblade
+
+# Build: in "/aero-623"
 make clean
 make -j
 
-<!-- Projection test with arbitrary point: ./bin/main.exe proj1  projects/Project-1/bladeupper.txt projects/Project-1/bladelower.txt -->
+# Verification: in "/aero-623"
+./bin/main.exe
+# or
+./bin/main.exe verify
 
-Refinement: ./bin/main.exe refine projects/Project-1/mesh_coarse.gri projects/Project-1/bladeupper.txt projects/Project-1/bladelower.txt mesh_refined.gri 2(strength) 3(refinement iteration)
-
-curve 1 is upperblade
-curve 5 is lowerblade
+# Refinement: in "/aero-623"
+./bin/main.exe refine projects/Project-1/mesh_coarse.gri projects/Project-1/bladeupper.txt projects/Project-1/bladelower.txt projects/Project-1/mesh_refined_out.gri  (alpha-sclar for size function) (refinement iteration)
