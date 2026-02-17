@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <vector>
 #include </Eigen/Dense>
-#include "/include/mesh/StateMesh.h"
 #include "/include/mesh/TriangularMesh.h"
 
 Eigen::Matrix3d bj_limiter(const Eigen::Matrix3d& Lgrad, const TriangularMesh& triMesh) {
