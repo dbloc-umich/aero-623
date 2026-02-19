@@ -1,6 +1,8 @@
 #include "TriangularMesh.h"
 #include <algorithm>
+#include <deque>
 #include <fstream>
+#include <functional>
 #include <iomanip>
 #include <iostream>
 
@@ -16,7 +18,10 @@ bool TriangularMesh::Face::operator==(const Face& other) const noexcept{
 }
 
 TriangularMesh::Element::Element(TriangularMesh& mesh, std::size_t pointID1, std::size_t pointID2, std::size_t pointID3, std::size_t ord, const std::string& basis):
-    _pointID{int(pointID1), int(pointID2), int(pointID3)}, _order(ord), _basis(basis)
+    _pointID{int(pointID1), int(pointID2), int(pointID3)},
+    _order(ord),
+    _basis(basis),
+    _centroid((mesh.node(pointID1) + mesh.node(pointID2) + mesh.node(pointID3))/3)
 {
     // Look if its faces have already been added to mesh._faces
     for (std::size_t j = 0; j < 3; j++){
@@ -28,8 +33,8 @@ TriangularMesh::Element::Element(TriangularMesh& mesh, std::size_t pointID1, std
         _faceID[j] = faceID;
 
         Face& face = mesh.face(faceID);
-        if (face._elemID[0] == -1) face._elemID[0] = mesh.numElems()-1; // No ElemID has been updated
-        else face._elemID[1] = mesh.numElems()-1;
+        if (face._elemID[0] == -1) face._elemID[0] = mesh.numElems(); // No ElemID has been updated
+        else face._elemID[1] = mesh.numElems();
     }
 
     // Calculates area
@@ -38,6 +43,7 @@ TriangularMesh::Element::Element(TriangularMesh& mesh, std::size_t pointID1, std
     double c = mesh.length(_faceID[2]);
     double s = (a+b+c)/2;
     _area = std::sqrt(s*(s-a)*(s-b)*(s-c));
+
 }
 
 TriangularMesh::TriangularMesh(const std::string& fileName){
@@ -96,9 +102,9 @@ TriangularMesh::TriangularMesh(const std::string& fileName){
         }
     }
 
-    // Periodic boundaries
     splitNextLine();
     if (v.size() > 0){
+        // Works for a GRI file that has periodic boundary info
         std::size_t nPG = std::stoi(v[0]);
         for (std::size_t i = 0; i < nPG; i++){
             splitNextLine();
@@ -128,12 +134,47 @@ TriangularMesh::TriangularMesh(const std::string& fileName){
                 }
             }
         }
+    } else{
+        // Periodic boundaries, manually, only works on this one mesh
+        std::deque<std::reference_wrapper<Face>> curve2Faces, curve4Faces, curve6Faces, curve8Faces;
+        for (Face& face: _faces){
+            if (face._title == "Curve2") curve2Faces.push_back(std::ref(face));
+            else if (face._title == "Curve4") curve4Faces.push_front(std::ref(face));
+            else if (face._title == "Curve6") curve6Faces.push_back(std::ref(face));
+            else if (face._title == "Curve8") curve8Faces.push_front(std::ref(face));
+        }
+
+        // Matching curve2 and curve4
+        for (std::size_t i = 0; i < curve2Faces.size(); i++){
+            Face& curve2Face = curve2Faces[i].get();
+            Face& curve4Face = curve4Faces[i].get();
+            std::size_t curve2ID = std::find(_faces.cbegin(), _faces.cend(), curve2Face) - _faces.cbegin();
+            std::size_t curve4ID = std::find(_faces.cbegin(), _faces.cend(), curve4Face) - _faces.cbegin();
+
+            curve2Face._periodicFaceID = curve4ID;
+            curve4Face._periodicFaceID = curve2ID;
+            curve2Face._periodicElemID = curve4Face._elemID[0];
+            curve4Face._periodicElemID = curve2Face._elemID[0];
+        }
+
+        // Matching curve6 and curve8
+        for (std::size_t i = 0; i < curve6Faces.size(); i++){
+            Face& curve6Face = curve6Faces[i].get();
+            Face& curve8Face = curve8Faces[i].get();
+            std::size_t curve6ID = std::find(_faces.cbegin(), _faces.cend(), curve6Face) - _faces.cbegin();
+            std::size_t curve8ID = std::find(_faces.cbegin(), _faces.cend(), curve8Face) - _faces.cbegin();
+
+            curve6Face._periodicFaceID = curve8ID;
+            curve8Face._periodicFaceID = curve6ID;
+            curve6Face._periodicElemID = curve8Face._elemID[0];
+            curve8Face._periodicElemID = curve6Face._elemID[0];
+        }
     }
 
     // Update normal vectors on each edge, always pointing from L to R
     for (Face& face: _faces){
         // Consturct a unit normal vector
-        Eigen::Vector2d edge = _nodes[face._pointID[1]] - _nodes[face._pointID[0]];
+        Eigen::Vector2d edge = node(face._pointID[1]) - node(face._pointID[0]);
         face._normal = Eigen::Vector2d{-edge[1], edge[0]};
         face._normal.normalize();
 
@@ -148,8 +189,8 @@ TriangularMesh::TriangularMesh(const std::string& fileName){
                 break;
             }
         }
-        const Eigen::Vector2d& p1 = _nodes[elem._pointID[localFaceID]]; // Point not on this edge
-        const Eigen::Vector2d& p2 = _nodes[elem._pointID[(localFaceID+1)%3]]; // One of the points on this edge
+        const Eigen::Vector2d& p1 = node(elem._pointID[localFaceID]); // Point not on this edge
+        const Eigen::Vector2d& p2 = node(elem._pointID[(localFaceID+1)%3]); // One of the points on this edge
         if ((p2-p1).dot(face._normal) > 0) face._normal *= -1;
 
         // Check for periodic faces
@@ -191,6 +232,33 @@ void TriangularMesh::writeGri(const std::string& fileName) const noexcept{
         }
     }
 
+    // Periodic edges
+    of.open(fileBase + "periodicEdges.txt");
+    std::vector<int> periodicEdgeID;
+    periodicEdgeID.reserve(_faces.size());
+    stop = periodicEdgeID.size() == 0;
+    int i = 1;
+    while (!stop){
+        for (auto face: _faces){
+            if (face.isBoundaryFace()){
+                if (face._periodicFaceID == -1) periodicEdgeID.push_back(0);
+                else{
+                    periodicEdgeID.push_back(i);
+                    i++;
+                }
+            } else{
+                stop = true;
+                break;
+            }
+        }
+    }
+    for (std::size_t i = 0; i < periodicEdgeID.size(); i++){
+        if (periodicEdgeID[i] == 0) continue;
+        const Face& face = _faces[i];
+        of << periodicEdgeID[face._periodicFaceID] << "\n";
+    }
+    of.close();
+
     // I2E
     of.open(fileBase + "I2E.txt");
     for (std::size_t i = 0; i < _faces.size(); i++){
@@ -223,33 +291,6 @@ void TriangularMesh::writeGri(const std::string& fileName) const noexcept{
             if (elemID < pElemID) of << elemID+1 << " " << faceL+1 << " " << pElemID+1 << " " << faceR+1 << "\n";
             else of << pElemID+1 << " " << faceR+1 << " " << elemID+1 << " " << faceL+1 << "\n";
         }
-    }
-    of.close();
-
-    // Periodic edges
-    of.open(fileBase + "periodicEdges.txt");
-    std::vector<int> periodicEdgeID;
-    periodicEdgeID.reserve(_faces.size());
-    stop = periodicEdgeID.size() == 0;
-    int i = 1;
-    while (!stop){
-        for (auto face: _faces){
-            if (face.isBoundaryFace()){
-                if (face._periodicFaceID == -1) periodicEdgeID.push_back(0);
-                else{
-                    periodicEdgeID.push_back(i);
-                    i++;
-                }
-            } else{
-                stop = true;
-                break;
-            }
-        }
-    }
-    for (std::size_t i = 0; i < periodicEdgeID.size(); i++){
-        if (periodicEdgeID[i] == 0) continue;
-        const Face& face = _faces[i];
-        of << periodicEdgeID[face._periodicFaceID] << "\n";
     }
     of.close();
 
