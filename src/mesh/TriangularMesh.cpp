@@ -1,4 +1,4 @@
-#include "TriangularMesh.h"
+#include "/mnt/c/Users/mmaru/Desktop/AE623/Project 2/include/mesh/TriangularMesh.h"
 #include <algorithm>
 #include <deque>
 #include <fstream>
