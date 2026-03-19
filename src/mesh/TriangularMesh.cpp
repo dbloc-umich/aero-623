@@ -122,14 +122,44 @@ TriangularMesh::TriangularMesh(const std::string& fileName, std::size_t p, std::
                 Eigen::Vector2d N;
                 if (face->title() == "Curve1"){
                     cFace->_xq.col(i) = _upper->eval(s); // Quadrature node position
+                    // get physical curved node locations for this edge
+                    // Physical coordinates at quadrature points
+                    // Tangent and normal vectors at edge quadrature points
+                    // Eigen::MatrixXd dx_dsig = gphiq_edge * edge_nodes_curved;
+                    // Eigen::MatrixXd tangents = dx_dsig.rowwise().normalized();
+                    // Eigen::MatrixXd normals = Eigen::MatrixXd(tangents.rows(), 2);
+                    // for (int i = 0; i < tangents.rows(); i++) 
+                    // {
+                    //     normals(i, 0) = -tangents(i, 1);
+                    //     normals(i, 1) = tangents(i, 0);
+                    // }
+
+                    // // Jacobian at edge quadrature points
+                    // Eigen::VectorXd edge_jacobians = dx_dsig.rowwise().norm();
+                    
                     // Outward normal vector
-                    N = _upper->evalDeriv2(s).normalized(); 
-                    if (N.y() > 0) N *= -1; // normals on the "upper" curve point down
+                    // N = _upper->evalDeriv2(s).normalized(); 
+                    // if (N.y() > 0) N *= -1; // normals on the "upper" curve point down
                 } else{
                     cFace->_xq.col(i) = _lower->eval(s); // Quadrature node position
+                    // get physical curved node locations for this edge
+                    // Physical coordinates at quadrature points
+                    // Tangent and normal vectors at edge quadrature points
+                    // Eigen::MatrixXd dx_dsig = gphiq_edge * edge_nodes_curved;
+                    // Eigen::MatrixXd tangents = dx_dsig.rowwise().normalized();
+                    // Eigen::MatrixXd normals = Eigen::MatrixXd(tangents.rows(), 2);
+                    // for (int i = 0; i < tangents.rows(); i++) 
+                    // {
+                    //     normals(i, 0) = -tangents(i, 1);
+                    //     normals(i, 1) = tangents(i, 0);
+                    // }
+
+                    // // Jacobian at edge quadrature points
+                    // Eigen::VectorXd edge_jacobians = dx_dsig.rowwise().norm();
+                    
                     // Outward normal vector
-                    N = _upper->evalDeriv2(s).normalized(); 
-                    if (N.y() < 0) N *= -1; // normals on the "lower" curve point up              
+                    // N = _upper->evalDeriv2(s).normalized(); 
+                    // if (N.y() < 0) N *= -1; // normals on the "lower" curve point up              
                 }
                 cFace->_n.col(i) = N;
             }
