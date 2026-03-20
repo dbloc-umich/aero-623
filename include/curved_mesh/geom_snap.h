@@ -4,7 +4,6 @@
 #include <vector>
 #include <string>
 #include <map>
-#include "curved_mesh/geom_snap.h"
 
 struct Point2D {
     double x, y;
