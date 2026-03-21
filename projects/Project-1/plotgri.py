@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import os
 
 #-----------------------------------------------------------
-def readgri(fname):
+def readgri(fname, onebased=False):
     with open(fname, 'r') as f:
         Nn, Ne, dim = [int(s) for s in f.readline().split()]
         if dim != 2:
@@ -15,17 +15,20 @@ def readgri(fname):
 
         NB = int(f.readline())
         B = []; Bname = []
+
+        offset = 1 if onebased else 0   # <-- add this
+
         for _ in range(NB):
             s = f.readline().split()
             Nb = int(s[0]); Bname.append(s[2])
-            Bi = np.array([[int(t)-1 for t in f.readline().split()] for _ in range(Nb)])
+            Bi = np.array([[int(t)-offset for t in f.readline().split()] for _ in range(Nb)])
             B.append(Bi)
 
         Ne0 = 0; E = []
         while Ne0 < Ne:
             s = f.readline().split()
             ne_blk = int(s[0])
-            Ei = np.array([[int(t)-1 for t in f.readline().split()] for _ in range(ne_blk)])
+            Ei = np.array([[int(t)-offset for t in f.readline().split()] for _ in range(ne_blk)])
             E = Ei if (Ne0 == 0) else np.concatenate((E, Ei), axis=0)
             Ne0 += ne_blk
 
@@ -132,12 +135,13 @@ def main():
     # h = np.loadtxt(base + "/mesh_refined.hnode.txt")
     # plot_wall_distance(Mesh, h, out_png_size, show_mesh=True, use_log=False, plot_sizing=True)
     
-    mesh_file = base + "/projects/Project-1/mesh_coarse.gri"  # available in sandbox
-    mesh = readgri(str(mesh_file))
+    mesh_file = base + "/projects/Project-3/test2_curved.gri"  # available in sandbox
+    mesh = readgri(str(mesh_file), onebased=False)  # <-- set onebased=True since .gri file is 1-based
 
-    out_png = base + "/mesh_coarse_overlay_blades.png"
-    plot_mesh_with_blades(mesh, str(base + "/projects/Project-1/bladeupper.txt"), str(base + "/projects/Project-1/bladelower.txt"), str(out_png))
+    out_png = base + "/test2_curved_overlay_blades.png"
+    plot_mesh_with_blades(mesh, str(base + "/projects/Project-3/bladeupper.txt"), str(base + "/projects/Project-3/bladelower.txt"), str(out_png))
 
 
 if __name__ == "__main__":
     main()
+ 

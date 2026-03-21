@@ -23,7 +23,9 @@ TriangularMesh& TriangularMesh::operator=(TriangularMesh&&) = default;
 TriangularMesh::TriangularMesh(const std::string& fileName, std::size_t p, std::size_t q, std::size_t r, bool oneBased):
     _ref(p, r)
 {
-    // std::cout << "Beginning" << std::endl;
+    // debug
+    std::cout << "Beginning" << std::endl;
+
     std::ifstream f(fileName);
     std::string line;
     std::vector<std::string> v;
@@ -47,6 +49,10 @@ TriangularMesh::TriangularMesh(const std::string& fileName, std::size_t p, std::
 
     // Fill in the boundary faces
     // std::cout << "Fill in boundary faces" << std::endl;
+    
+    // debug
+    std::cout << "Filling in boundary faces..." << std::endl;
+
     _faces.reserve(nElemTot); // not exact size, only an approximate
 
     splitNextLine();
@@ -85,6 +91,9 @@ TriangularMesh::TriangularMesh(const std::string& fileName, std::size_t p, std::
             }
         }
     }
+
+    // debug
+    std::cout << "Boundary faces filled. Number of faces: " << _faces.size() << "." << std::endl;
 
     // Treatment of curve edges - do a cubic spline interpolation
     if (q > 1){
@@ -146,6 +155,9 @@ TriangularMesh::TriangularMesh(const std::string& fileName, std::size_t p, std::
             else iL++;
         }
     }
+
+    // debug
+    std::cout << "Curve edges treated." << std::endl;
 
     // Fill in the elements, interior nodes, and connectivity info
     // std::cout << "Fill in the elements, interior nodes, and connectivity info" << std::endl;
@@ -305,6 +317,9 @@ TriangularMesh::TriangularMesh(const std::string& fileName, std::size_t p, std::
         }
     }
 
+    // debug
+    std::cout << "Elements filled. Number of elements: " << _elems.size() << "." << std::endl;
+
     // Periodic boundaries, manually, only works on this one mesh
     // std::cout << "Periodic boundaries, manually, only works on this one mesh" << std::endl;
     std::deque<int> curve2Faces, curve4Faces, curve6Faces, curve8Faces;
@@ -315,6 +330,9 @@ TriangularMesh::TriangularMesh(const std::string& fileName, std::size_t p, std::
         else if (face._title == "Curve6") curve6Faces.push_back(i);
         else if (face._title == "Curve8") curve8Faces.push_front(i);
     }
+
+    // debug
+    std::cout << "Matching periodic faces..." << std::endl;
 
     // Matching curve2 and curve4
     for (std::size_t i = 0; i < curve2Faces.size(); i++){
@@ -331,6 +349,9 @@ TriangularMesh::TriangularMesh(const std::string& fileName, std::size_t p, std::
         _faces[curve4ID]->_periodicFaceID = curve2ID;  
     }
 
+    // debug
+    std::cout << "Periodic faces matched. Now matching curve6 and curve8..." << std::endl;
+
     // Matching curve6 and curve8
     for (std::size_t i = 0; i < curve6Faces.size(); i++){
         int curve6ID = curve6Faces[i];
@@ -345,6 +366,9 @@ TriangularMesh::TriangularMesh(const std::string& fileName, std::size_t p, std::
         _faces[curve8ID]->_elemID[1] = elemR; 
         _faces[curve8ID]->_periodicFaceID = curve6ID;
     }
+
+    // debug
+    std::cout << "Periodic faces matched. Now updating normal vectors..." << std::endl;
 
     // Update normal vectors on each edge, always clpointing from L to R
     for (int i = 0; i < int(numFaces()); i++){
@@ -386,7 +410,12 @@ TriangularMesh::TriangularMesh(const std::string& fileName, std::size_t p, std::
             // std::cout << std::endl;
         }
     }
+
+    // debug
+    std::cout << "Normal vectors updated. Mesh construction complete." << std::endl;
 }
+
+
 
 double TriangularMesh::length(std::size_t faceID) const noexcept{ return _faces[faceID]->_length; }
 

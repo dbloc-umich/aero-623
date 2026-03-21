@@ -71,11 +71,17 @@ int main() {
     // } while (q != 1 && q != 3);    
     std::size_t r = 2*(p+q);
 
+    // debug
+    std::cout << "Loading mesh..." << std::endl;
+
     if (meshName == "test") mesh = std::make_shared<TriangularMesh>("projects/Project-3/test2.gri", p, q, r, false);
     else if (meshName == "coarse") mesh = std::make_shared<TriangularMesh>("projects/Project-2/mesh_refined_2394.gri", p, q, r);
     else if (meshName == "fine") mesh = std::make_shared<TriangularMesh>("projects/Project-2/meshGlobalRefined1.gri", p, q, r);
     else if (meshName == "finer") mesh = std::make_shared<TriangularMesh>("projects/Project-2/meshGlobalRefined2.gri", p, q, r);
     else mesh = std::make_shared<TriangularMesh>("projects/Project-2/meshGlobalRefined3.gri", p, q, r);
+
+    // debug
+    std::cout << "Mesh loaded. Number of nodes: " << mesh->numNodes() << ", number of faces: " << mesh->numFaces() << ", number of elements: " << mesh->numElems() << "." << std::endl;
 
     // Inlet conditions
     double gamma = 1.4;
@@ -94,6 +100,9 @@ int main() {
     // std::shared_ptr<FreeStreamBC> freeStream = std::make_shared<FreeStreamBC>(gamma);
     // std::vector<std::shared_ptr<BoundaryCondition>> bc{freeStream, inlet, freeStream, freeStream};
 
+    // debug
+    std::cout << "Boundary conditions set." << std::endl;
+
     // Initialize the state mesh
     double rhoi = rho0;
     double rhoui = rho0*M*a0*std::cos(alpha);
@@ -105,6 +114,9 @@ int main() {
     U.state(1).fill(rhoui);
     U.state(2).fill(rhovi);
     U.state(3).fill(rhoEi);
+
+    // debug
+    std::cout << "State mesh initialized." << std::endl;
 
     // Solver
     std::shared_ptr<FVFlux> flux;
