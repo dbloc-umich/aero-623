@@ -12,13 +12,14 @@ static double speedOfSound(const Eigen::Vector4d& U, double gamma){
     double rho = U[0];
     double u = U[1]/rho;
     double v = U[2]/rho;
-    double E = U[3]/rho;
-    double p = (gamma-1)*(E - 0.5*(u*u + v*v));
-    return std::sqrt(gamma*p);
+    double rhoE = U[3];
+    double p = (gamma-1)*(rhoE - 0.5*rho*(u*u + v*v));
+    return std::sqrt(gamma*p/rho);
 }
 
 Eigen::ArrayXd LocalTimeStepper::dt(const StateMesh& u) const noexcept{
     auto mesh = u.mesh();
+    int p = u.p();
     int Np = u.Np();
 
     // Computes the wave speed on each edge
@@ -31,7 +32,7 @@ Eigen::ArrayXd LocalTimeStepper::dt(const StateMesh& u) const noexcept{
         Eigen::Vector4d ue; // state vector at cell e
         if (Np == 1) ue = u.cell(e);
         else{
-            Lagrange2DBasisFunctions Phi(u.p());
+            Lagrange2DBasisFunctions Phi(p);
             ue = Phi.funcEval(1.0/3, 1.0/3, Eigen::MatrixXd(u.cell(e))); // computes state at the cell centroid
         }
 
@@ -49,7 +50,7 @@ Eigen::ArrayXd LocalTimeStepper::dt(const StateMesh& u) const noexcept{
             Eigen::Vector4d une; // state vector at cell e
             if (Np == 1) une = u.cell(ne);
             else{
-                Lagrange2DBasisFunctions Phi(u.p());
+                Lagrange2DBasisFunctions Phi(p);
                 une = Phi.funcEval(1.0/3, 1.0/3, Eigen::MatrixXd(u.cell(ne))); // computes state at the cell centroid
             }
             double cR = speedOfSound(une, _gamma);
@@ -63,7 +64,7 @@ Eigen::ArrayXd LocalTimeStepper::dt(const StateMesh& u) const noexcept{
         const auto& elem = mesh->elem(i);
         double P = 0;
         for (auto faceID: elem.faceID()) P += sFace[faceID]*mesh->length(faceID);
-        sElem.segment(i*Np, Np).fill(2*elem.area()*_minCFL/P);
+        sElem.segment(i*Np, Np).fill(2*elem.area()*_CFL/P);
     }
     return sElem;
 }

@@ -50,13 +50,13 @@ Eigen::MatrixXd FEAdvection::computeResidual(const StateMesh& u) const{
         std::size_t Np = u.Np();
         Lagrange2DBasisFunctions PhiBasis(p);
 
-        const auto& intXi = ref.intXi();
-        const auto& intW = ref.intW();
-        const auto& intPhiXi = ref.intPhiXi();
-        const auto& intPhiEta = ref.intPhiEta();
+        const auto& intXi = ref.intXi(); // stored internal quad points location
+        const auto& intW = ref.intW(); // stored internal quad weights
+        const auto& intPhiXi = ref.intPhiXi(); // stored internal xi-derivative of phi at quad points
+        const auto& intPhiEta = ref.intPhiEta(); // stored internal eta-derivative of phi ad quad points
         std::size_t intNq = intW.size();
 
-        const auto& edgeW = ref.edgeW();
+        const auto& edgeW = ref.edgeW(); // stored edge quad weights
         std::size_t edgeNq = edgeW.size();
         
         for (std::size_t k = 0; k < mesh->numElems(); k++){
@@ -81,12 +81,15 @@ Eigen::MatrixXd FEAdvection::computeResidual(const StateMesh& u) const{
                         double eta = intXi(1, nq);
                         Eigen::Vector4d u = PhiBasis.funcEval(xi, eta, cell); // state values at the quadrature point
                         Eigen::Matrix<double,4,2> F = physicalFlux(u, _flux->gamma()); // get fluxes from states
-                        
+#ifdef MONITOR
+                        std::cout << "\t\t\tAt quadrature point [" << xi << ", " << eta << "], u = " << u.transpose() << ", Fx = " << F.col(0).transpose() << ", Fy = " << F.col(1).transpose() << std::endl;
+#endif
                         double detJ = elem.detJacobian(nq);
                         Eigen::Vector2d gRef{intPhiXi(i,nq), intPhiEta(i,nq)}; // 2-by-1
                         Eigen::Matrix2d JT = elem.jacobian(nq).transpose(); // 2-by-2
                         Eigen::Vector2d gPhi = JT.lu().solve(gRef); // 2-by-1
                         integral += intW[nq] * detJ * F*gPhi; // (4-by-2)*(2-by-1) = (4-by-1)
+                        // integral += intW[nq] * F*gRef;
                     }
 #ifdef MONITOR
                     std::cout << "\t\t\tArea flux contribution is " << integral.transpose() << std::endl;
@@ -97,18 +100,18 @@ Eigen::MatrixXd FEAdvection::computeResidual(const StateMesh& u) const{
                 // Line integral over each of the edges
                 for (std::size_t edge = 0; edge < 3; edge++){
                     // std::cout << "Line #" << edge << " on element " << k << std::endl;
-                    const auto& edgeXi = ref.edgeXi(edge);
-                    const auto& edgePhi = ref.edgePhi(edge);
-                    // double factor = (edge == 1) ? std::sqrt(2) : 1.0; // edge 0 is the hypotnuse and needs an extra weight factor
+                    const auto& edgeXi = ref.edgeXi(edge); // stored edge phi derivatives at quad points
+                    const auto& edgePhi = ref.edgePhi(edge); // stored edge phi values at quad points
 
                     auto faceID = elem.faceID(edge);
 #ifdef MONITOR
                     std::cout << "\t\tComputing line integral on edge " << faceID << "." << std::endl;
 #endif
                     const auto& face = mesh->face(faceID);
-                    // if (face.isPeriodicFace()) std::cout << "This is a periodic face" << std::endl;
-                    // else std::cout << "This is not a periodic face" << std::endl;
-
+                    Eigen::Vector2d refNormal;
+                    if (edge == 0) refNormal = {std::sqrt(2)/2, std::sqrt(2)/2};
+                    else if (edge == 1) refNormal = {1, 0};
+                    else refNormal = {0, -1};
                     if (face.isBoundaryFace()){
                         // Boundary edge, use boundary condition to compute flux
 #ifdef MONITOR
@@ -138,7 +141,6 @@ Eigen::MatrixXd FEAdvection::computeResidual(const StateMesh& u) const{
                         else if (dynamic_cast<OutletBC*>(bc.get())) std::cout << "Outlet BC." << std::endl;
                         else std::cout << "Unknown BC." << std::endl;
 #endif
-
                         Eigen::Vector4d integral = Eigen::Vector4d::Zero();
                         for (std::size_t nq = 0; nq < edgeNq; nq++){
                             double xi = edgeXi(0, nq);
@@ -146,9 +148,17 @@ Eigen::MatrixXd FEAdvection::computeResidual(const StateMesh& u) const{
                             double phi = edgePhi(i, nq);
                             Eigen::Vector4d u = PhiBasis.funcEval(xi, eta, cell); // state values at the quadrature point
                             Eigen::Vector2d normal = face.normal(nq);
-                            Eigen::Vector4d F;
-                            F = bc->computeFlux(u, normal); // get numerical flux from boundary condition
+                            Eigen::Vector4d F = bc->computeFlux(u, normal); // get numerical flux from boundary condition
+                            // Eigen::Vector4d F = bc->computeFlux(u, refNormal);
+#ifdef MONITOR
+                            std::cout << "\t\t\tAt quadrature point [" << xi << ", " << eta << "], u = " << u.transpose() << ", F = " << F.transpose() << std::endl;
+                            if (face.title() == "Curve3"){
+                                if (u[1]*normal[0] + u[2]*normal[1] < 0) std::cout << "\t\t\tThis is an inlet condition." << std::endl;
+                                else std::cout << "\t\t\tThis is an outlet condition." << std::endl;
+                            }
+#endif
                             integral -= edgeW[nq] * face.detJ(nq) * phi*F;
+                            // integral -= edgeW[nq] * phi*F;
                         }
 #ifdef MONITOR
                         std::cout << "\t\t\tBoundary flux contribution is " << integral.transpose() << std::endl;
@@ -165,7 +175,7 @@ Eigen::MatrixXd FEAdvection::computeResidual(const StateMesh& u) const{
                             normal *= -1; // Element k is the R element, has to flip normal
                         }
 #ifdef MONITOR
-                        std::cout << "\t\tThis is an interior edge, facing neighbor element " << kn << "." << std::endl;
+                        std::cout << "\t\tThis is an interior edge, facing neighbor element " << kn << ". Normal = " << normal.transpose() << std::endl;
 #endif
                         // Find the local edge index of this edge on element kn
                         std::size_t edgeN;
@@ -177,14 +187,14 @@ Eigen::MatrixXd FEAdvection::computeResidual(const StateMesh& u) const{
                         Eigen::MatrixXd cellN = u.cell(kn);
                         Eigen::Matrix2Xd edgeXiN = ref.edgeXi(edgeN);
 #ifdef MONITOR
-                        Eigen::Vector2d x0 = mesh->node(elem.pointID(0));
-                        Eigen::Vector2d x1 = mesh->node(elem.pointID(1));
-                        Eigen::Vector2d x2 = mesh->node(elem.pointID(2));
+                        // Eigen::Vector2d x0 = mesh->node(elem.pointID(0));
+                        // Eigen::Vector2d x1 = mesh->node(elem.pointID(1));
+                        // Eigen::Vector2d x2 = mesh->node(elem.pointID(2));
 
-                        const Element& elemN = mesh->elem(kn);
-                        Eigen::Vector2d x0n = mesh->node(elemN.pointID(0));
-                        Eigen::Vector2d x1n = mesh->node(elemN.pointID(1));
-                        Eigen::Vector2d x2n = mesh->node(elemN.pointID(2));
+                        // const Element& elemN = mesh->elem(kn);
+                        // Eigen::Vector2d x0n = mesh->node(elemN.pointID(0));
+                        // Eigen::Vector2d x1n = mesh->node(elemN.pointID(1));
+                        // Eigen::Vector2d x2n = mesh->node(elemN.pointID(2));
 #endif
 
                         // std::cout << "\tThe actual integration" << std::endl;
@@ -200,13 +210,17 @@ Eigen::MatrixXd FEAdvection::computeResidual(const StateMesh& u) const{
                             Eigen::Vector4d uR = PhiBasis.funcEval(xiN, etaN, cellN); // right-state values at the quadrature point
 
 #ifdef MONITOR
-                            std::cout << "\t\t\tThis quadrature point is " << (x0 + (x1-x0)*xi + (x2-x0)*eta).transpose() << " on elemL";
-                            std::cout << " and " << (x0n + (x1n-x0n)*xiN + (x2n-x0n)*etaN).transpose() << " on elemR. " << std::endl;
+                            // std::cout << "\t\t\tThis quadrature point is " << (x0 + (x1-x0)*xi + (x2-x0)*eta).transpose() << " on elemL";
+                            // std::cout << " and " << (x0n + (x1n-x0n)*xiN + (x2n-x0n)*etaN).transpose() << " on elemR. " << std::endl;
 #endif
 
                             double phi = edgePhi(i, nq);
-                            Eigen::Vector4d F = _flux->computeFlux(uL, uR, normal); // get numerical flux from boundary condition                   
+                            Eigen::Vector4d F = _flux->computeFlux(uL, uR, normal); // get numerical flux from boundary condition
+#ifdef MONITOR
+                            std::cout << "\t\t\tAt quadrature point [" << xi << ", " << eta << "], uL = " << uL.transpose() << ", uR = " << uR.transpose() << ", F = " << F.transpose() << std::endl;
+#endif                   
                             integral -= edgeW[nq] * face.detJ(nq) * phi*F;
+                            // integral -= edgeW[nq] * phi*F;
                         }
 #ifdef MONITOR
                         std::cout << "\t\t\tInterior flux contribution is " << integral.transpose() << std::endl;

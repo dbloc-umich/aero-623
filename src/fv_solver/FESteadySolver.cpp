@@ -23,31 +23,26 @@ void FESteadySolver::solve(StateMesh& u) const{
         int Np = u.Np();
 
         Eigen::MatrixXd R = _residual->computeResidual(u);
-        // std::cout << R.middleCols(0, Np) << std::endl << std::endl;
-        // std::cout << mesh->elem(0).detJacobian() << std::endl;
-
         for (int k = 0; k < u.cellCount(); k++){
             Eigen::MatrixXd Rk = R.middleCols(k*Np, Np).transpose(); // create a temporary to avoid alias issues;
             if (!mesh->elem(k).isCurvedElement()){
-                // On a linear element
+                // On a linear element, mass matrix is easily assembled
                 double detJ = mesh->elem(k).detJacobian();
                 R.middleCols(k*Np, Np).transpose() = ref.MLLT().solve(Rk) / detJ;
             } else{
-                // On a curved element
+                // On a curved element, mass matrix is stored within each curved element
                 CurvedElement& cElem = dynamic_cast<CurvedElement&>(mesh->elem(k));
-                Eigen::LLT<Eigen::MatrixXd> MLLT = cElem.MLLT();
-                R.middleCols(k*Np, Np).transpose() = ref.MLLT().solve(Rk);
+                const auto& MLLT = cElem.MLLT();
+                R.middleCols(k*Np, Np).transpose() = MLLT.solve(Rk);
             }
         }
         return R;
     };
 
     double norm = func(0, u.matrix()).lpNorm<1>();
-    std::cout << norm << std::endl;
     _l1norm.push_back(norm); // the first L1-norm
     
     bool isConverged = norm <= _tol;
-    int iter = 0;
     while (!isConverged){
         Eigen::ArrayXd dt = _stepper->dt(u);
         _integrator->integrate(func, u.matrix(), 0, dt);
@@ -55,8 +50,6 @@ void FESteadySolver::solve(StateMesh& u) const{
         std::cout << norm << std::endl;
         _l1norm.push_back(norm);
         isConverged = norm/_l1norm.front() <= _tol || norm <= _tol; // Either relative or absolute norm satisfies tolerance
-        iter++;
-        _result.emplace_back(u.matrix());
     }
     _result.emplace_back(u.matrix());
 }
