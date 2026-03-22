@@ -4,6 +4,9 @@
 #include "Element.h"
 class CurvedElement: public Element{
     public:
+    // // fix for arm64
+    // EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    
     friend class TriangularMesh;
     CurvedElement(const Eigen::Vector3i&, const Eigen::Vector3i&, double);
 

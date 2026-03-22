@@ -4,6 +4,9 @@
 #include "Eigen/Dense"
 class Element{
     public:
+    // // fix for arm64
+    // EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
     friend class TriangularMesh;
     Element(const Eigen::Vector3i&, const Eigen::Vector3i&, double); //, const Eigen::Vector2d&);
     virtual ~Element() = default;

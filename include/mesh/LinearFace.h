@@ -4,6 +4,9 @@
 #include "Face.h"
 class LinearFace: public Face{
     public:
+    // // fix for arm64
+    // EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
     friend class TriangularMesh;
     LinearFace(const Eigen::Vector2i&, double, std::string="");
 
