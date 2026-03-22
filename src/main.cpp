@@ -48,8 +48,7 @@ int main() {
     double M = 0.1;
 
     // Boundary conditions
-    //std::shared_ptr<InletOutletBC> inlet = std::make_shared<InletOutletBC>(rho0, a0, alpha, pout, gamma);
-    std::shared_ptr<InletBC> inlet = std::make_shared<InletBC>(rho0, a0, alpha, gamma);
+    std::shared_ptr<InletOutletBC> inlet = std::make_shared<InletOutletBC>(rho0, a0, alpha, pout, gamma);
     std::shared_ptr<BoundaryCondition> wall = std::make_shared<InviscidWallBC>(gamma);
     std::shared_ptr<BoundaryCondition> outlet = std::make_shared<OutletBC>(pout, gamma);
     std::shared_ptr<FreeStreamBC> freeStream = std::make_shared<FreeStreamBC>(gamma);
@@ -151,6 +150,7 @@ int main() {
         file.close();
     } catch (std::runtime_error& ex){
         std::cerr << ex.what() << std::endl;
+        return 1;
     }
 
     std::size_t p, q;
@@ -206,12 +206,32 @@ int main() {
         //debug
         std::cout << "CFL set to " << stepper->CFL() << "." << std::endl;
         solver = std::make_unique<FESteadySolver>(residual, integrator, stepper);
+        int steadyState = 1;
 
         //debug
         std::cout << "Beginning high-order solve..." << std::endl;
 
         try{
             solver->solve(U);
+            Eigen::MatrixXd results = solver->getResult().back(); // size = 1 if steady, more than 1 if unsteady
+            std::vector<double> l1norm = solver->getNorm();
+
+            std::ofstream file;
+            std::string resultFilePath = "projects/Project-3/results/";
+            resultFilePath += meshName + "_mesh_";
+            resultFilePath += (steadyState == 0) ? "unsteady_" : "steady_";
+            resultFilePath += "p" + std::to_string(p) + "_";
+            resultFilePath += "q" + std::to_string(q) + "_";
+            resultFilePath += (timeOrder == 3) ? "RK3_" : "RK4_";
+            resultFilePath += fluxName;
+            
+            file.open(resultFilePath + "_norm.txt");
+            for (auto norm: l1norm) file << norm << "\n";
+            file.close();
+
+            file.open(resultFilePath + ".txt");
+            for (Eigen::Index i = 0; i < results.cols(); i++) file << results.col(i).transpose() << "\n";
+            file.close();
         } catch (std::runtime_error& ex){
             std::cerr << ex.what() << std::endl;
         }
