@@ -13,7 +13,10 @@ class Solver{
     Solver(std::shared_ptr<Residual>, std::shared_ptr<TimeIntegrator>, std::shared_ptr<TimeStepper>);
     Solver(Solver&&);
     Solver& operator=(Solver&&);
-    ~Solver();
+    //~Solver();
+
+    // fix for arm 64 virtual destructor
+    virtual ~Solver() = default;
 
     virtual void solve(StateMesh&) const = 0;
     auto getResult() const noexcept{ return std::move(_result); }

@@ -15,4 +15,4 @@ Solver::Solver(std::shared_ptr<Residual> residual, std::shared_ptr<TimeIntegrato
 
 Solver::Solver(Solver&&) = default;
 Solver& Solver::operator=(Solver&&) = default; 
-Solver::~Solver() = default;
+// Solver::~Solver() = default;

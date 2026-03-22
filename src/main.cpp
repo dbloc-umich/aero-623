@@ -120,6 +120,10 @@ int main() {
     if (p != 0 || q != 1){
         // Simulates a different 
         std::size_t r = 2*(p+q)+1;
+
+        //debug
+        std::cout << "Refining mesh and setting up high-order solver..." << std::endl;
+        
         if (meshName == "test") mesh = std::make_shared<TriangularMesh>("projects/Project-3/test2.gri", p, q, r, false);
         else if (meshName == "coarse") mesh = std::make_shared<TriangularMesh>("projects/Project-2/mesh_refined_2394.gri", p, q, r);
         else if (meshName == "fine") mesh = std::make_shared<TriangularMesh>("projects/Project-2/meshGlobalRefined1.gri", p, q, r);
@@ -148,8 +152,17 @@ int main() {
             std::cout << "Enter CFL number in (0, 1]: ";
             std::cin >> cfl;
         } while (cfl <= 0 || cfl > 1);
+
+        //debug
+        std::cout << "Setting CFL to " << cfl << "..." << std::endl;
         stepper->setCFL(cfl);
+
+        //debug
+        std::cout << "CFL set to " << stepper->CFL() << "." << std::endl;
         solver = std::make_unique<FESteadySolver>(residual, integrator, stepper);
+
+        //debug
+        std::cout << "Beginning high-order solve..." << std::endl;
 
         try{
             solver->solve(U);
