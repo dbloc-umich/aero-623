@@ -22,14 +22,11 @@
 
 #include "Lagrange2DBasisFunctions.h"
 
-int main() {
+int main(int argc, char *argv[]) {
+    assert(argc == 5 || argc == 7);
     std::shared_ptr<TriangularMesh> mesh;
-    std::string meshName;
-    do{
-        std::cout << "Enter mesh name (\"test\", \"coarse\", \"fine\", \"finer\", or \"finest\"): ";
-        std::cin >> meshName;
-        std::transform(meshName.begin(), meshName.end(), meshName.begin(), [](unsigned char c){ return std::tolower(c); });
-    } while (meshName != "test" && meshName != "coarse" && meshName != "fine" && meshName != "finer" && meshName != "finest");
+    std::string meshName = argv[1];
+    assert(meshName == "test" || meshName == "coarse" || meshName == "fine" || meshName == "finer" || meshName == "finest");
 
     // Run first calculations with a low-order solver first
     if (meshName == "test") mesh = std::make_shared<TriangularMesh>("projects/Project-3/test2.gri", 0, 1, 2, false);
@@ -63,12 +60,8 @@ int main() {
 
     // Solver
     std::shared_ptr<FVFlux> flux;
-    std::string fluxName;
-    do{
-        std::cout << "Enter flux name (\"roe\" or \"hlle\"): ";
-        std::cin >> fluxName;
-        std::transform(fluxName.begin(), fluxName.end(), fluxName.begin(), [](unsigned char c){ return std::tolower(c); });
-    } while (fluxName != "roe" && fluxName != "hlle");
+    std::string fluxName = argv[2];
+    assert(fluxName == "roe" || fluxName == "hlle");
     if (fluxName == "roe") flux = std::make_shared<RoeFlux>(gamma);
     else flux = std::make_shared<HLLEFlux>(gamma);
 
@@ -107,17 +100,13 @@ int main() {
         return 1;
     }
 
-    std::size_t p, q;
-    do{
-        std::cout << "Enter the Lagrange polynomial order for solution approximation (p = 0, 1, 2, or 3): ";
-        std::cin >> p;
-    } while (p < 0 || p > 3);
-    do{
-        std::cout << "Enter the Lagrange polynomial order for geometry approximation (q = 1 or 3): ";
-        std::cin >> q;
-    } while (q != 1 && q != 3);
+    std::size_t p = std::stoi(argv[3]);
+    std::size_t q = std::stoi(argv[4]);
+    assert (p >= 0 && p <= 3);
+    assert (q == 1 || q == 3);
 
     if (p != 0 || q != 1){
+        assert (argc == 7);
         // Simulates a different 
         std::size_t r = 2*(p+q)+1;
         if (meshName == "test") mesh = std::make_shared<TriangularMesh>("projects/Project-3/test2.gri", p, q, r, false);
@@ -136,18 +125,11 @@ int main() {
         // std::cout << U.matrix() << std::endl;
         // std::cout << residual->computeResidual(U).lpNorm<1>() << std::endl;
 
-        int timeOrder;
-        do{
-            std::cout << "Enter time integration order of accuracy (3 or 4): ";
-            std::cin >> timeOrder;    
-        } while (timeOrder != 3 && timeOrder != 4);
-        if (timeOrder == 3) integrator = std::make_shared<SSP_RK3>();
+        int timeOrder = std::stoi(argv[5]);
+        assert (timeOrder == 3 || timeOrder == 4);
 
-        double cfl;
-        do{
-            std::cout << "Enter CFL number in (0, 1]: ";
-            std::cin >> cfl;
-        } while (cfl <= 0 || cfl > 1);
+        double cfl = std::stod(argv[6]);
+        assert (cfl > 0.0 && cfl <= 1.0);
         stepper->setCFL(cfl);
         solver = std::make_unique<FESteadySolver>(residual, integrator, stepper);
         int steadyState = 1;
