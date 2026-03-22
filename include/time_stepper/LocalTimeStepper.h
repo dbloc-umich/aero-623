@@ -5,7 +5,7 @@
 
 class LocalTimeStepper: public TimeStepper{
     public:
-    LocalTimeStepper(double minCFL, double gamma, std::shared_ptr<FVFlux> flux): TimeStepper(minCFL, gamma, flux) {}
+    LocalTimeStepper(double CFL, double gamma, std::shared_ptr<FVFlux> flux): TimeStepper(CFL, gamma, flux) {}
     Eigen::ArrayXd dt(const StateMesh& u) const noexcept override;
 };
 
