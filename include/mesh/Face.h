@@ -6,9 +6,6 @@ class Face{
     public:
     // //fix for arm64
     // EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
-    // Virtual destructor to ensure proper cleanup of derived classes for arm 64
-    virtual ~Face() = default;
     
     friend class TriangularMesh;
     Face(const Eigen::Vector2i&, double, std::string="");
@@ -20,7 +17,7 @@ class Face{
     // adding for robustness to handle seg faults
     bool isBoundaryFace() const noexcept{ return _elemID[1] == -1 && _periodicFaceID == -1; }
     bool isPeriodicFace() const noexcept{ return _elemID[1] != -1 && _periodicFaceID != -1; }
-    
+
     virtual bool isCurvedFace() const noexcept = 0;
     bool operator==(const Face& other) const noexcept;
 
