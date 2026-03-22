@@ -6,6 +6,7 @@ class Face{
     public:
     friend class TriangularMesh;
     Face(const Eigen::Vector2i&, double, std::string="");
+    virtual ~Face() = default;
 
     bool isBoundaryFace() const noexcept{ return _title == "Curve1" || _title == "Curve3" || _title == "Curve5" || _title == "Curve7"; }
     bool isPeriodicFace() const noexcept{ return _title == "Curve2" || _title == "Curve4" || _title == "Curve6" || _title == "Curve8"; }

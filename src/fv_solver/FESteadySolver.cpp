@@ -47,7 +47,7 @@ void FESteadySolver::solve(StateMesh& u) const{
         Eigen::ArrayXd dt = _stepper->dt(u);
         _integrator->integrate(func, u.matrix(), 0, dt);
         norm = func(0, u.matrix()).lpNorm<1>();
-        std::cout << norm << std::endl;
+        //std::cout << norm << std::endl;
         _l1norm.push_back(norm);
         isConverged = norm/_l1norm.front() <= _tol || norm <= _tol; // Either relative or absolute norm satisfies tolerance
     }
