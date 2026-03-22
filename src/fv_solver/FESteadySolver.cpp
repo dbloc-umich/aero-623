@@ -17,12 +17,25 @@ FESteadySolver::FESteadySolver(std::shared_ptr<Residual> residual, std::shared_p
 void FESteadySolver::solve(StateMesh& u) const{
     auto func = [this, &u](double t, Eigen::MatrixXd& x)
     {
+        // //debug --------
+        // std::cout << "Computing the residual at time " << t << "..." << std::endl;
+        // // -------------
+
         u.matrix() = std::move(x);
         auto mesh = u.mesh();
         const ReferenceElement& ref = mesh->reference();
         int Np = u.Np();
 
+        // // debug --------
+        // std::cout << "Residual computed. Applying mass matrix inverse..." << std::endl;
+        // // --------------
+
         Eigen::MatrixXd R = _residual->computeResidual(u);
+
+        // // debug --------
+        // std::cout << "Mass matrix inverse applied. Returning the result..." << std::endl;
+        // // --------------
+
         for (int k = 0; k < u.cellCount(); k++){
             Eigen::MatrixXd Rk = R.middleCols(k*Np, Np).transpose(); // create a temporary to avoid alias issues;
             if (!mesh->elem(k).isCurvedElement()){

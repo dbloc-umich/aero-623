@@ -11,7 +11,7 @@
 #include <Eigen/LU>
 #include <iostream>
 
-//#define MONITOR
+// #define MONITOR
 #ifdef MONITOR
 #include "FreeStreamBC.h"
 #include "InviscidWallBC.h"
@@ -42,19 +42,37 @@ static Eigen::Matrix<double,4,2> physicalFlux(const Eigen::Vector4d& U, double g
 }
 
 Eigen::MatrixXd FEAdvection::computeResidual(const StateMesh& u) const{
+
+    // // debug --------
+    // std::cout << "Computing the residual..." << std::endl;
+    // // --------------
+
     auto mesh = u.mesh();
     Eigen::MatrixXd residual = Eigen::MatrixXd::Zero(u.stateCount(), u.cellCount()*u.Np());
+
+    // // debug --------
+    // std::cout << "Residual initialized to zero. Starting to compute contributions from each element..." << std::endl;
+    // // --------------
+
     if (_flux){
         const ReferenceElement& ref = mesh->reference();
         std::size_t p = u.p();
         std::size_t Np = u.Np();
         Lagrange2DBasisFunctions PhiBasis(p);
 
+        // //debug ---------
+        // std::cout << "Reference element and basis functions initialized. Starting to loop over elements..." << std::endl;
+        // // --------------
+
         const auto& intXi = ref.intXi(); // stored internal quad points location
         const auto& intW = ref.intW(); // stored internal quad weights
         const auto& intPhiXi = ref.intPhiXi(); // stored internal xi-derivative of phi at quad points
         const auto& intPhiEta = ref.intPhiEta(); // stored internal eta-derivative of phi ad quad points
         std::size_t intNq = intW.size();
+
+        // //debug ---------
+        // std::cout << "Internal quadrature points and weights retrieved. Starting to loop over elements..." << std::endl;
+        // // --------------
 
         const auto& edgeW = ref.edgeW(); // stored edge quad weights
         std::size_t edgeNq = edgeW.size();
@@ -169,6 +187,25 @@ Eigen::MatrixXd FEAdvection::computeResidual(const StateMesh& u) const{
                         std::size_t kn;
                         Eigen::Vector2d normal = face.normal(); // linear face so normal does not vary along the edge
                         // std::cout << face.elemID().transpose() << std::endl;
+
+                        // // ADD THIS CHECK:
+                        // if (face.elemID(1) == -1){
+                        //     throw std::runtime_error("ERROR: Face " + std::to_string(faceID) + 
+                        //                             " has no right element but is not a boundary face.");
+                        // }
+
+                        // // Another sanity check:
+                        // if (face.isBoundaryFace()){
+                        //     throw std::runtime_error("ERROR: Face " + std::to_string(faceID) + 
+                        //                             " is marked as a boundary face but has two neighboring elements.");
+                        // }
+
+                        // // Another sanity check:
+                        // if (face.isPeriodicFace()){
+                        //     throw std::runtime_error("ERROR: Face " + std::to_string(faceID) + 
+                        //                             " is marked as a periodic face but has two neighboring elements. Periodic faces should be treated as boundary faces with special BCs.");
+                        // }
+
                         if (face.elemID(0) == int(k)) kn = face.elemID(1);
                         else{
                             kn = face.elemID(0);
@@ -179,14 +216,29 @@ Eigen::MatrixXd FEAdvection::computeResidual(const StateMesh& u) const{
 #endif
                         // Find the local edge index of this edge on element kn
                         std::size_t edgeN;
+
+                        // //debug --------
+                        // std::cout << "\t\tFinding the local edge index of this face on the neighboring element..." << std::endl;
+                        // // --------------
+
                         if (face.isPeriodicFace()) faceID = face.periodicFaceID();
+
+                        // //debug --------
+                        // std::cout << "\t\tThe periodic counterpart of this face is " << faceID << "." << std::endl;
+                        // // --------------
+
                         if (mesh->elem(kn).faceID(0) == faceID) edgeN = 0;
                         else if (mesh->elem(kn).faceID(1) == faceID) edgeN = 1;
                         else edgeN = 2;
+                        
+                        // //debug --------
+                        // std::cout << "\t\tThe local edge index on the neighboring element is " << edgeN << "." << std::endl;
+                        // // --------------
 
                         Eigen::MatrixXd cellN = u.cell(kn);
                         Eigen::Matrix2Xd edgeXiN = ref.edgeXi(edgeN);
 #ifdef MONITOR
+                        std::cout << "\t\tThe local edge index on the neighboring element is " << edgeN << "." << std::endl;
                         // Eigen::Vector2d x0 = mesh->node(elem.pointID(0));
                         // Eigen::Vector2d x1 = mesh->node(elem.pointID(1));
                         // Eigen::Vector2d x2 = mesh->node(elem.pointID(2));

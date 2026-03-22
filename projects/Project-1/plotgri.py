@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib
-matplotlib.use("Agg")
+# matplotlib.use("MacOSX")  # Use the MacOSX backend for interactive plotting on macOS
 import matplotlib.pyplot as plt
 import os
 
@@ -112,6 +112,52 @@ def plot_mesh_with_blades(mesh, blade_upper, blade_lower, out_png):
     plt.savefig(out_png, dpi=400)
     plt.close(fig)
 
+def plot_mesh_with_blades_new(mesh, blade_upper, blade_lower, out_png, highlight_faces=None):
+    V = mesh["V"]; E = mesh["E"]; B = mesh["B"]; Bname = mesh["Bname"]
+
+    fig = plt.figure(figsize=(10, 10))
+    plt.triplot(V[:,0], V[:,1], E, linewidth=0.3, color='black', alpha=1)
+
+    # Build face list matching C++ TriangularMesh order:
+    # 1) boundary faces first (in order of boundary groups)
+    # 2) then interior faces as encountered during element loop
+    edge_order = {}
+    face_list = []
+
+    # Step 1: add boundary edges first
+    for Bi in B:
+        for edge in Bi:
+            e = tuple(sorted([edge[0], edge[1]]))
+            if e not in edge_order:
+                edge_order[e] = len(face_list)
+                face_list.append(e)
+
+    # Step 2: add interior edges from element loop
+    for tri in E:
+        for j in range(3):
+            e = tuple(sorted([tri[j], tri[(j+1)%3]]))
+            if e not in edge_order:
+                edge_order[e] = len(face_list)
+                face_list.append(e)
+
+    # Annotate specific face numbers
+    if highlight_faces is not None:
+        for fid in highlight_faces:
+            if fid < len(face_list):
+                n0, n1 = face_list[fid]
+                mx = (V[n0,0] + V[n1,0]) / 2
+                my = (V[n0,1] + V[n1,1]) / 2
+                plt.plot([V[n0,0], V[n1,0]], [V[n0,1], V[n1,1]], 'r-', linewidth=2)
+                plt.annotate(str(fid), (mx, my), fontsize=10, color='red',
+                           ha='center', va='center',
+                           bbox=dict(boxstyle='round,pad=0.2', fc='yellow', alpha=0.8))
+
+    plt.axis("equal")
+    plt.tight_layout()
+    # plt.show()
+    plt.savefig(out_png, dpi=500)
+    plt.close(fig)
+
 #-----------------------------------------------------------
 def main():
 
@@ -135,11 +181,11 @@ def main():
     # h = np.loadtxt(base + "/mesh_refined.hnode.txt")
     # plot_wall_distance(Mesh, h, out_png_size, show_mesh=True, use_log=False, plot_sizing=True)
     
-    mesh_file = base + "/projects/Project-3/test2_curved.gri"  # available in sandbox
-    mesh = readgri(str(mesh_file), onebased=False)  # <-- set onebased=True since .gri file is 1-based
+    mesh_file = base + "/projects/Project-2/mesh_refined_2394.gri"  # available in sandbox
+    mesh = readgri(str(mesh_file), onebased=True)  # <-- set onebased=True since .gri file is 1-based
 
     out_png = base + "/test2_curved_overlay_blades.png"
-    plot_mesh_with_blades(mesh, str(base + "/projects/Project-3/bladeupper.txt"), str(base + "/projects/Project-3/bladelower.txt"), str(out_png))
+    plot_mesh_with_blades_new(mesh, str(base + "/projects/Project-3/bladeupper.txt"), str(base + "/projects/Project-3/bladelower.txt"), str(out_png), highlight_faces=[277, 278, 279])
 
 
 if __name__ == "__main__":

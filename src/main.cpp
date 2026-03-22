@@ -73,20 +73,66 @@ int main() {
     if (fluxName == "roe") flux = std::make_shared<RoeFlux>(gamma);
     else flux = std::make_shared<HLLEFlux>(gamma);
 
+    //debug--------
+    std::cout << "Setting up solver..." << std::endl;
+    // ------------
+
     std::shared_ptr<Residual> residual = std::make_shared<FEAdvection>(flux);
+
+    //debug--------
+    std::cout << "Residual set up." << std::endl;
+    // ------------
+
     std::shared_ptr<TimeIntegrator> integrator = std::make_shared<RK4>();
-    std::shared_ptr<TimeStepper> stepper = std::make_shared<LocalTimeStepper>(1.0, gamma, flux);
+
+    //debug--------
+    std::cout << "Time integrator set up." << std::endl;
+    // ------------
+
+    std::shared_ptr<TimeStepper> stepper = std::make_shared<LocalTimeStepper>(0.8, gamma, flux);
+
+    //debug--------
+    std::cout << "Time stepper set up." << std::endl;
+    // ------------
+
     std::unique_ptr<Solver> solver = std::make_unique<FESteadySolver>(residual, integrator, stepper);
 
+    // debug--------
+    std::cout << "Solver set up." << std::endl;
+    // ------------
+
     try{
+
+        //debug--------
+        std::cout << "Beginning solve..." << std::endl;
+        // ------------
+
         solver->solve(U);
+
+        // debug--------
+        std::cout << "Solve complete." << std::endl;
+        // ------------
+
         Eigen::MatrixXd results = solver->getResult().back(); // size = 1 if steady, more than 1 if unsteady
+
+        // debug--------
+        std::cout << "Results obtained from solver." << std::endl;
+        // ------------
+
         std::vector<double> l1norm = solver->getNorm();
+
+        //debug--------
+        std::cout << "Solve complete. Writing results to file..." << std::endl;
+        // ------------
 
         std::ofstream file;
         std::string resultFilePath = "projects/Project-3/results/";
         resultFilePath += meshName + "_mesh_steady_p0_q1_RK4_";
         resultFilePath += fluxName;
+
+        //debug --------
+        std::cout << "Result file path: " << resultFilePath << std::endl;
+        // ------------
         
         file.open(resultFilePath + "_norm.txt");
         for (auto norm: l1norm) file << norm << "\n";
@@ -123,7 +169,7 @@ int main() {
 
         //debug
         std::cout << "Refining mesh and setting up high-order solver..." << std::endl;
-        
+
         if (meshName == "test") mesh = std::make_shared<TriangularMesh>("projects/Project-3/test2.gri", p, q, r, false);
         else if (meshName == "coarse") mesh = std::make_shared<TriangularMesh>("projects/Project-2/mesh_refined_2394.gri", p, q, r);
         else if (meshName == "fine") mesh = std::make_shared<TriangularMesh>("projects/Project-2/meshGlobalRefined1.gri", p, q, r);

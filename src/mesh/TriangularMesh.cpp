@@ -23,8 +23,6 @@ TriangularMesh& TriangularMesh::operator=(TriangularMesh&&) = default;
 TriangularMesh::TriangularMesh(const std::string& fileName, std::size_t p, std::size_t q, std::size_t r, bool oneBased):
     _ref(p, r)
 {
-    // debug
-    std::cout << "Beginning" << std::endl;
 
     std::ifstream f(fileName);
     std::string line;
@@ -46,12 +44,6 @@ TriangularMesh::TriangularMesh(const std::string& fileName, std::size_t p, std::
         splitNextLine();
         _nodes.emplace_back(std::stod(v[0]), std::stod(v[1]));
     }
-
-    // Fill in the boundary faces
-    // std::cout << "Fill in boundary faces" << std::endl;
-    
-    // debug
-    std::cout << "Filling in boundary faces..." << std::endl;
 
     _faces.reserve(nElemTot); // not exact size, only an approximate
 
@@ -96,8 +88,8 @@ TriangularMesh::TriangularMesh(const std::string& fileName, std::size_t p, std::
         }
     }
 
-    // debug
-    std::cout << "Boundary faces filled. Number of faces: " << _faces.size() << "." << std::endl;
+    // // debug
+    // std::cout << "Boundary faces filled. Number of faces: " << _faces.size() << "." << std::endl;
 
     // Treatment of curve edges - do a cubic spline interpolation
     if (q > 1){
@@ -160,11 +152,7 @@ TriangularMesh::TriangularMesh(const std::string& fileName, std::size_t p, std::
         }
     }
 
-    // debug
-    std::cout << "Curve edges treated." << std::endl;
-
     // Fill in the elements, interior nodes, and connectivity info
-    // std::cout << "Fill in the elements, interior nodes, and connectivity info" << std::endl;
     int Np = (p+1)*(p+2)/2;
     _elems.reserve(nElemTot);
     while (nElemTot > 0){
@@ -173,9 +161,6 @@ TriangularMesh::TriangularMesh(const std::string& fileName, std::size_t p, std::
         // std::size_t ord = std::stoi(v[1]);
         // std::string basis = v[2];
         nElemTot -= nElem;
-
-        // debug
-        std::cout << "Filling in " << nElem << " elements..." << std::endl;
 
         for (int i = 0; i < int(nElem); i++){
             splitNextLine();
@@ -188,41 +173,41 @@ TriangularMesh::TriangularMesh(const std::string& fileName, std::size_t p, std::
 
             //Eigen::Vector2d centroid{ (_nodes[ind1].x() + _nodes[ind2].x() + _nodes[ind3].x())/3, (_nodes[ind1].y() + _nodes[ind2].y() + _nodes[ind3].y())/3 };
 
-            //debug
-            std::cout << "Element " << i << ": point IDs = [" << pointID.transpose() << "]." << std::endl;
+            // //debug
+            // std::cout << "Element " << i << ": point IDs = [" << pointID.transpose() << "]." << std::endl;
 
             bool isCurvedElement = false;
             for (int j = 0; j < 3; j++){
-                //debug
-                std::cout << "Processing face " << j << " of element " << i << "." << std::endl;
+                // //debug
+                // std::cout << "Processing face " << j << " of element " << i << "." << std::endl;
 
                 // Look if its faces have already been added to the list of faces
                 Eigen::Vector2i facePointID{pointID[(j+1)%3], pointID[(j+2)%3]};
 
-                // debug
-                std::cout << "Check 1" << std::endl;
+                // // debug
+                // std::cout << "Check 1" << std::endl;
                 std::unique_ptr<Face> iface = std::make_unique<LinearFace>(facePointID, 0.0);
 
-                // debug
-                std::cout << "Check 2" << std::endl;
+                // // debug
+                // std::cout << "Check 2" << std::endl;
                 auto it = std::find_if(_faces.cbegin(), _faces.cend(), [&iface](const auto& other){ return *iface == *other; });
 
-                //debug
-                std::cout << "Check 3" << std::endl;
+                // //debug
+                // std::cout << "Check 3" << std::endl;
                 std::size_t ind = it - _faces.cbegin();
 
-                //debug
-                std::cout << "ind as size_t = " << ind << ", as int = " << int(ind) << std::endl;
+                // //debug
+                // std::cout << "ind as size_t = " << ind << ", as int = " << int(ind) << std::endl;
                 faceID[j] = ind;
 
-                //debug
-                std::cout << "faceID[" << j << "] = " << faceID[j] << std::endl;
+                // //debug
+                // std::cout << "faceID[" << j << "] = " << faceID[j] << std::endl;
 
                 // If not found, create a new face and add it to the list
                 if (it == _faces.cend()){
 
-                    //debug
-                    std::cout << "Face not found. Creating a new face with point IDs [" << facePointID.transpose() << "]." << std::endl;
+                    // //debug
+                    // std::cout << "Face not found. Creating a new face with point IDs [" << facePointID.transpose() << "]." << std::endl;
 
                     iface->_length = (_nodes[pointID[(j+1)%3]] - _nodes[pointID[(j+2)%3]]).lpNorm<2>();
                     length[j] = iface->_length;
@@ -230,48 +215,50 @@ TriangularMesh::TriangularMesh(const std::string& fileName, std::size_t p, std::
                     _faces.push_back(std::move(iface));
                 } else{
 
-                    //debug
-                    std::cout << "_faces[ind] is null: " << (_faces[ind] == nullptr) << std::endl;
-                    std::cout << "_faces[ind] address: " << _faces[ind].get() << std::endl;
-                    std::cout << "_faces.size() = " << _faces.size() << std::endl;
-                    std::cout << "ind = " << ind << std::endl;
-                    std::cout << "calling length()..." << std::endl;
-                    length[j] = _faces[ind]->length();
-                    std::cout << "length = " << length[j] << std::endl;
+                    // //debug
+                    // std::cout << "_faces[ind] is null: " << (_faces[ind] == nullptr) << std::endl;
+                    // std::cout << "_faces[ind] address: " << _faces[ind].get() << std::endl;
+                    // std::cout << "_faces.size() = " << _faces.size() << std::endl;
+                    // std::cout << "ind = " << ind << std::endl;
+                    // std::cout << "calling length()..." << std::endl;
+                    // length[j] = _faces[ind]->length();
+                    // std::cout << "length = " << length[j] << std::endl;
 
                     length[j] = _faces[ind]->length();
-                    std::cout << "length = " << length[j] << std::endl;
-                    std::cout << "_elemID[0] = " << _faces[ind]->_elemID[0] << std::endl;
+                    // std::cout << "length = " << length[j] << std::endl;
+                    // std::cout << "_elemID[0] = " << _faces[ind]->_elemID[0] << std::endl;
 
-                    //debug
-                    std::cout << "_elemID[0] = " << _faces[ind]->_elemID[0] << std::endl;
-                    std::cout << "about to assign..." << std::endl;
-                    // _faces[ind]->_elemID[0] = 0;  // hardcode 0 instead of i
-                    std::cout << "assigned" << std::endl;
-                    std::cout << "i = " << i << " (type int)" << std::endl;
+                    // //debug
+                    // std::cout << "_elemID[0] = " << _faces[ind]->_elemID[0] << std::endl;
+                    // std::cout << "about to assign..." << std::endl;
+                    // // _faces[ind]->_elemID[0] = 0;  // hardcode 0 instead of i
+                    // std::cout << "assigned" << std::endl;
+                    // std::cout << "i = " << i << " (type int)" << std::endl;
                     if (_faces[ind]->_elemID[0] == -1){
-                        //debug
-                        std::cout << "_elemID[0] is -1, assigning _elemID[0] = " << i << std::endl;
+                        // //debug
+                        // std::cout << "_elemID[0] is -1, assigning _elemID[0] = " << i << std::endl;
+
                         _faces[ind]->_elemID[0] = i;
-                        std::cout << "assigned _elemID[0] = " << _faces[ind]->_elemID[0] << std::endl;
+
+                        // std::cout << "assigned _elemID[0] = " << _faces[ind]->_elemID[0] << std::endl;
                     } else{
-                        //debug
-                        std::cout << "_elemID[0] is not -1, assigning _elemID[1] = " << i << std::endl;
+                        // //debug
+                        // std::cout << "_elemID[0] is not -1, assigning _elemID[1] = " << i << std::endl;
                         _faces[ind]->_elemID[1] = i;
                         if (_faces[ind]->_elemID[0] > i) std::swap(_faces[ind]->_elemID[0], _faces[ind]->_elemID[1]);
                     }
                 }
 
-                //debug
-                std::cout << "about to call isCurvedFace on face " << ind << std::endl;
-                std::cout << "face address: " << _faces[ind].get() << std::endl;
+                // //debug
+                // std::cout << "about to call isCurvedFace on face " << ind << std::endl;
+                // std::cout << "face address: " << _faces[ind].get() << std::endl;
 
                 if (_faces[ind]->isCurvedFace()) isCurvedElement = true;
-                std::cout << "isCurvedFace done" << std::endl;
+                // std::cout << "isCurvedFace done" << std::endl;
             }
 
-            // debug
-            std::cout << "Element " << i << ": point IDs = [" << pointID.transpose() << "], face IDs = [" << faceID.transpose() << "], lengths = [" << length.transpose() << "]." << std::endl;
+            // // debug
+            // std::cout << "Element " << i << ": point IDs = [" << pointID.transpose() << "], face IDs = [" << faceID.transpose() << "], lengths = [" << length.transpose() << "]." << std::endl;
 
             if (!isCurvedElement){
                 double s = (length[0]+length[1]+length[2])/2;
@@ -444,8 +431,8 @@ TriangularMesh::TriangularMesh(const std::string& fileName, std::size_t p, std::
         if (LinearFace* lFace = dynamic_cast<LinearFace*>(_faces[i].get())){
             Element* elem = _elems[lFace->_elemID[0]].get();
             
-            //debug
-            std::cout << "The left element of edge " << i << " is element " << lFace->_elemID[0] << std::endl;
+            // //debug
+            // std::cout << "The left element of edge " << i << " is element " << lFace->_elemID[0] << std::endl;
 
             std::size_t localFaceID;
             bool onElemR = false; // for periodic edges, the element it is not on may be elemL

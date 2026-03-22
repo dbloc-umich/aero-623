@@ -13,8 +13,13 @@ class Face{
     friend class TriangularMesh;
     Face(const Eigen::Vector2i&, double, std::string="");
 
-    bool isBoundaryFace() const noexcept{ return _title == "Curve1" || _title == "Curve3" || _title == "Curve5" || _title == "Curve7"; }
-    bool isPeriodicFace() const noexcept{ return _title == "Curve2" || _title == "Curve4" || _title == "Curve6" || _title == "Curve8"; }
+    // bool isBoundaryFace() const noexcept{ return _title == "Curve1" || _title == "Curve3" || _title == "Curve5" || _title == "Curve7"; }
+    // bool isPeriodicFace() const noexcept{ return _title == "Curve2" || _title == "Curve4" || _title == "Curve6" || _title == "Curve8"; }
+
+    // adding for robustness to handle seg faults
+    bool isBoundaryFace() const noexcept{ return _elemID[1] == -1 && _periodicFaceID == -1; }
+    bool isPeriodicFace() const noexcept{ return _elemID[1] != -1 && _periodicFaceID != -1; }
+    
     virtual bool isCurvedFace() const noexcept = 0;
     bool operator==(const Face& other) const noexcept;
 
