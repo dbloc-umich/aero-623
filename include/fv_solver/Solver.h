@@ -11,9 +11,7 @@ class TimeStepper;
 class Solver{
     public:
     Solver(std::shared_ptr<Residual>, std::shared_ptr<TimeIntegrator>, std::shared_ptr<TimeStepper>);
-    Solver(Solver&&);
-    Solver& operator=(Solver&&);
-    ~Solver();
+    ~Solver() = default;
 
     virtual void solve(StateMesh&) const = 0;
     auto getResult() const noexcept{ return std::move(_result); }

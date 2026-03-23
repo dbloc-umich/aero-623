@@ -12,7 +12,3 @@ Solver::Solver(std::shared_ptr<Residual> residual, std::shared_ptr<TimeIntegrato
 {
     assert(_residual && _integrator && _stepper);
 }
-
-Solver::Solver(Solver&&) = default;
-Solver& Solver::operator=(Solver&&) = default; 
-Solver::~Solver() = default;
