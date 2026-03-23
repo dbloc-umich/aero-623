@@ -30,7 +30,11 @@ TriangularMesh::TriangularMesh(const std::string& fileName, std::size_t p, std::
 
     auto splitNextLine = [this, &f, &line, &v]()
         {
+            // std::getline(f, line);
+            // v = split(line);
+
             std::getline(f, line);
+            if (!line.empty() && line.back() == '\r') line.pop_back();  // strip \r
             v = split(line);
         };
 
@@ -58,6 +62,12 @@ TriangularMesh::TriangularMesh(const std::string& fileName, std::size_t p, std::
         splitNextLine();
         std::size_t nBFace = std::stoi(v[0]);
         std::string title = v[2];
+
+        // debug --------
+        std::cout << "Boundary group " << i << ": nBFace=" << nBFace 
+                << " title='" << title << "' v.size()=" << v.size() << std::endl;
+        // --------------
+        
         for (std::size_t j = 0; j < nBFace; j++){
             splitNextLine();
             std::size_t ind1 = std::stoi(v[0]) - int(oneBased);
@@ -65,10 +75,13 @@ TriangularMesh::TriangularMesh(const std::string& fileName, std::size_t p, std::
             Eigen::Vector2i pointID{ind1, ind2};
             double length = (_nodes[ind1] - _nodes[ind2]).lpNorm<2>();
             if (q == 1 || (title != "Curve1" && title != "Curve5"))
+            // if (q == 1 || (title != "Airfoil_top" && title != "Airfoil_bot"))
                 _faces.emplace_back(std::make_unique<LinearFace>(pointID, length, title));
             else{
                 _faces.emplace_back(std::make_unique<CurvedFace>(pointID, length, q, title));
-                if (title == "Curve1"){
+                if (title == "Curve1")
+                // if (title == "Airfoil_top")
+                {
                     if (Xu.empty()){ // no points have been added into curve1
                         Xu.push_back(_nodes[ind1].x());
                         Yu.push_back(_nodes[ind1].y());
@@ -93,6 +106,17 @@ TriangularMesh::TriangularMesh(const std::string& fileName, std::size_t p, std::
 
     // Treatment of curve edges - do a cubic spline interpolation
     if (q > 1){
+
+        // debug --------
+        std::cout << "Building upper spline with " << Xu.size() << " points." << std::endl;
+        std::cout << "Upper spline points:" << std::endl;
+        for (int i = 0; i < Xu.size(); i++)
+            std::cout << "  " << Xu[i] << " " << Yu[i] << std::endl;
+        std::cout << "Building lower spline with " << Xl.size() << " points." << std::endl;
+        std::cout << "Lower spline points:" << std::endl;
+        for (int i = 0; i < Xl.size(); i++)
+            std::cout << "  " << Xl[i] << " " << Yl[i] << std::endl;
+        // --------------
         Eigen::VectorXd Xl2 = Eigen::Map<Eigen::VectorXd>(Xl.data(), Xl.size());
         Eigen::VectorXd Yl2 = Eigen::Map<Eigen::VectorXd>(Yl.data(), Yl.size());
         Eigen::VectorXd Xu2 = Eigen::Map<Eigen::VectorXd>(Xu.data(), Xu.size());
@@ -106,9 +130,12 @@ TriangularMesh::TriangularMesh(const std::string& fileName, std::size_t p, std::
         auto& Su = _upper->S();
         for (const auto& face: _faces){
             if (face->title() != "Curve1" && face->title() != "Curve5") continue;
+            // if (face->title() != "Airfoil_top" && face->title() != "Airfoil_bot") continue;
             CurvedFace* cFace = dynamic_cast<CurvedFace*>(face.get());
             double s0 = face->title() == "Curve1" ? Su[iU] : Sl[iL];
             double s1 = face->title() == "Curve1" ? Su[iU+1] : Sl[iL+1];
+            // double s0 = face->title() == "Airfoil_top" ? Su[iU] : Sl[iL];
+            // double s1 = face->title() == "Airfoil_top" ? Su[iU+1] : Sl[iL+1];
             cFace->_length = s1-s0; // assign length
 
             // Generate the Lagrange nodes for geometry appoximation
@@ -117,6 +144,7 @@ TriangularMesh::TriangularMesh(const std::string& fileName, std::size_t p, std::
             for (int i = 1; i < lnodes.size()-1; i++){
                 double s = lnodes[i];
                 cFace->_xL.col(i-1) = face->title() == "Curve1" ? _upper->eval(s) : _lower->eval(s);
+                // cFace->_xL.col(i-1) = face->title() == "Airfoil_top" ? _upper->eval(s) : _lower->eval(s);
             }
 
             // Use the Lagrange basis to approximate/interpolate the edge
@@ -141,13 +169,16 @@ TriangularMesh::TriangularMesh(const std::string& fileName, std::size_t p, std::
                 Eigen::Vector2d N{tds_dsigma[1], -tds_dsigma[0]};
                 N.normalize();
                 if (face->title() == "Curve1" && N.y() > 0) N *= -1; // normals on the "upper" curve point down
-                if (face->title() == "Curve5" && N.y() < 0) N *= -1; // normals on the "lower" curve point up              
+                if (face->title() == "Curve5" && N.y() < 0) N *= -1; // normals on the "lower" curve point up     
+                // if (face->title() == "Airfoil_top" && N.y() > 0) N *= -1; // normals on the "upper" curve point down
+                // if (face->title() == "Airfoil_bot" && N.y() < 0) N *= -1; // normals on the "lower" curve point up         
                 
                 cFace->_n.col(i) = N;
                 cFace->_detJ[i] = tds_dsigma.lpNorm<2>();
             }
 
             if (face->title() == "Curve1") iU++;
+            // if (face->title() == "Airfoil_top") iU++;
             else iL++;
         }
     }

@@ -181,7 +181,7 @@ def main():
     # h = np.loadtxt(base + "/mesh_refined.hnode.txt")
     # plot_wall_distance(Mesh, h, out_png_size, show_mesh=True, use_log=False, plot_sizing=True)
     
-    mesh_file = base + "/projects/Project-2/mesh_refined_2394.gri"  # available in sandbox
+    mesh_file = base + "/projects/Project-3/mesh_refined_2394.gri"  # available in sandbox
     mesh = readgri(str(mesh_file), onebased=True)  # <-- set onebased=True since .gri file is 1-based
 
     out_png = base + "/test2_curved_overlay_blades.png"

@@ -7,6 +7,8 @@
 #include "TimeStepper.h"
 #include "TriangularMesh.h"
 #include <iostream>
+#include <fstream>
+#include <cmath>
 
 FESteadySolver::FESteadySolver(std::shared_ptr<Residual> residual, std::shared_ptr<TimeIntegrator> integrator,
                                std::shared_ptr<TimeStepper> stepper, double tol):
@@ -56,13 +58,33 @@ void FESteadySolver::solve(StateMesh& u) const{
     _l1norm.push_back(norm); // the first L1-norm
     
     bool isConverged = norm <= _tol;
+
+    // ✅ Open file ONCE
+    std::ofstream log("residual_log.txt");
+
+    int iter = 0;
+
     while (!isConverged){
         Eigen::ArrayXd dt = _stepper->dt(u);
         _integrator->integrate(func, u.matrix(), 0, dt);
+
         norm = func(0, u.matrix()).lpNorm<1>();
-        //std::cout << norm << std::endl;
+
+        std::cout << norm << std::endl;
+        
+        // File logging
+        log << iter << " " << norm << "\n";
+
         _l1norm.push_back(norm);
+
+        if (std::isnan(norm) || std::isinf(norm)) {
+            std::cerr << "Divergence detected. Stopping solver.\n";
+            break;
+        }
+
         isConverged = norm/_l1norm.front() <= _tol || norm <= _tol; // Either relative or absolute norm satisfies tolerance
+
+        iter++;
     }
     _result.emplace_back(u.matrix());
 }

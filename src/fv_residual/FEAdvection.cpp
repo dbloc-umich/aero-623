@@ -140,6 +140,11 @@ Eigen::MatrixXd FEAdvection::computeResidual(const StateMesh& u) const{
                         else if (face.title() == "Curve3") bc = u.bc(1);
                         else if (face.title() == "Curve5") bc = u.bc(2);
                         else bc = u.bc(3);
+                        // if (face.title() == "Airfoil_top") bc = u.bc(0);
+                        // else if (face.title() == "Airfoil_bot") bc = u.bc(1);
+                        // else if (face.title() == "Inlet") bc = u.bc(2);
+                        // else if (face.title() == "Outlet") bc = u.bc(3);
+                        // else throw std::runtime_error("ERROR: Unrecognized boundary face title: " + face.title());
 
                         // Transient cases, these lines do nothing if running in steady-state
                         if (auto inlet = dynamic_cast<InletBC*>(bc.get())){
@@ -230,7 +235,7 @@ Eigen::MatrixXd FEAdvection::computeResidual(const StateMesh& u) const{
                         if (mesh->elem(kn).faceID(0) == faceID) edgeN = 0;
                         else if (mesh->elem(kn).faceID(1) == faceID) edgeN = 1;
                         else edgeN = 2;
-                        
+
                         // //debug --------
                         // std::cout << "\t\tThe local edge index on the neighboring element is " << edgeN << "." << std::endl;
                         // // --------------

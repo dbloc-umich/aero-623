@@ -51,8 +51,10 @@ int main() {
     std::shared_ptr<InletOutletBC> inlet = std::make_shared<InletOutletBC>(rho0, a0, alpha, pout, gamma);
     std::shared_ptr<BoundaryCondition> wall = std::make_shared<InviscidWallBC>(gamma);
     std::shared_ptr<BoundaryCondition> outlet = std::make_shared<OutletBC>(pout, gamma);
-    std::shared_ptr<FreeStreamBC> freeStream = std::make_shared<FreeStreamBC>(gamma);
+    // std::shared_ptr<FreeStreamBC> freeStream = std::make_shared<FreeStreamBC>(gamma);
+    // std::vector<std::shared_ptr<BoundaryCondition>> bc{freeStream, freeStream, freeStream, freeStream};
     std::vector<std::shared_ptr<BoundaryCondition>> bc{wall, inlet, wall, outlet};
+
 
     // Initialize to uniform inlet flow conditions
     StateMesh U(mesh, bc, 4, 0);
