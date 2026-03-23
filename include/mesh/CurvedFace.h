@@ -2,6 +2,7 @@
 #define CURVED_FACE_H
 
 #include "Face.h"
+#include <memory>
 class CurvedFace: public Face{
     public:
     friend class TriangularMesh;
@@ -10,7 +11,8 @@ class CurvedFace: public Face{
     bool isCurvedFace() const noexcept override{ return true; }
     Eigen::Vector2d normal(std::size_t q) const noexcept override{ return _n.col(q); }
     double detJ(std::size_t q) const noexcept override{ return _detJ[q]; }
-
+    Eigen::Vector2d xq(std::size_t q) const noexcept { return _xq.col(q); }
+    
     protected:
     Eigen::Matrix2Xd _xL; // internal Lagrange nodes for geometry approximation
     Eigen::Matrix2Xd _xq; // position of each quadrature points
