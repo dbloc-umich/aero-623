@@ -69,12 +69,12 @@ void calcCP(const StateMesh& U, std::string filePath) {
                     }
                     // determine if upper or lower boundary
                     if (t== "Curve1") {
-                        cpVals_up.emplace_back(cpVal);
-                        xVals_up.emplace_back(xTemp);
+                        cpVals_up.insert(cpVals_up.end(), cpVal.begin(), cpVal.end());
+                        xVals_up.insert(xVals_up.end(), xTemp.begin(), xTemp.end());
                     }
                     else if (t=="Curve5") {
-                        cpVals_low.emplace_back(cpVal);
-                        xVals_low.emplace_back(xTemp);
+                        cpVals_low.insert(cpVals_low.end(), cpVal.begin(), cpVal.end());
+                        xVals_low.insert(xVals_low.end(), xTemp.begin(), xTemp.end());
                     }
             }
             else {
